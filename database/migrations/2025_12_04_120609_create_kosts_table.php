@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->text('alamat');
             $table->unsignedBigInteger('harga')->default(0);
             $table->string('tipe')->nullable(); 
-            $table->json('fasilitas')->nullable()->default(json_encode([]));
+            $table->json('fasilitas')->nullable();
             $table->json('foto')->nullable();
             $table->enum('status', ['pending','diterima','ditolak'])->default('pending');
             $table->timestamps();

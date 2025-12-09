@@ -111,6 +111,12 @@ Route::middleware('admin')
         Route::patch('/kost/{kost}/approve', [KostAdminController::class, 'approve'])->name('kost.approve');
         Route::patch('/kost/{kost}/reject', [KostAdminController::class, 'reject'])->name('kost.reject');
 
+        // Fitur "Panding")
+        Route::put('/admin/kost/{id}/reset', [AdminKostController::class, 'resetStatus'])->name('admin.kost.reset');
+
+        // Route untuk menghapus kost
+        Route::delete('/admin/kost/{id}/delete', [AdminKostController::class, 'destroy'])->name('admin.kost.destroy');
+
         // CRUD Kost Admin (AUTO -> admin.kost.*)
         Route::resource('kost', KostAdminController::class)->names('kost');
 

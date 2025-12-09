@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('password');
 
             // Role
-            $table->enum('role', ['user', 'pemilik'])->default('user');
+            $table->string('role')->default('user');
 
             // Optional Laravel
             $table->rememberToken();
