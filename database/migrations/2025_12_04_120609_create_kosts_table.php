@@ -17,7 +17,9 @@ return new class extends Migration {
             $table->json('fasilitas')->nullable();
             $table->json('foto')->nullable();
             $table->enum('status', ['pending','diterima','ditolak'])->default('pending');
+            $table->json('foto');
             $table->timestamps();
+            
         });
     }
 

@@ -5,21 +5,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kostarae`</title>
-    @vite('resources/css/app.css')
+    
+    {{-- Vite Assets --}}
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    {{-- Alpine.js (Untuk interaksi UI) --}}
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    
+    {{-- Font (Opsional, gunakan default sans) --}}
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
 </head>
 
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
 
-<script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    {{-- 1. LOGIC NAVBAR OTOMATIS --}}
+    {{-- Jika login tampilkan navbar user, jika tidak tampilkan navbar tamu --}}
+    @auth
+        @include('partials.navbar-user')
+    @else
+        @include('partials.navbar')
+    @endauth
 
-@include('partials.register-modal')
+    {{-- 2. TOAST NOTIFIKASI GLOBAL --}}
+    {{-- Menangkap pesan sukses dari Controller (seperti: with('status', '...')) --}}
+    @if (session('status'))
+        <div x-data="{ show: true }" 
+             x-show="show" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform translate-y-2"
+             x-transition:enter-end="opacity-100 transform translate-y-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform translate-y-0"
+             x-transition:leave-end="opacity-0 transform translate-y-2"
+             x-init="setTimeout(() => show = false, 4000)" 
+             class="fixed top-24 right-4 z-[9999] bg-emerald-500 text-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-4 max-w-sm"
+             style="display: none;">
+            
+            {{-- Icon Check --}}
+            <div class="bg-white/20 p-2 rounded-full">
+                <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
 
-<body>
+            <div>
+                <h4 class="font-bold text-sm">Berhasil!</h4>
+                <p class="text-xs opacity-90">
+                    @if(session('status') === 'password-updated')
+                        Kata sandi Anda telah berhasil diperbarui.
+                    @elseif(session('status') === 'profile-updated')
+                        Profil Anda berhasil diperbarui.
+                    @else
+                        {{ session('status') }}
+                    @endif
+                </p>
+            </div>
 
-    @include('partials.navbar')
+            {{-- Close Button --}}
+            <button @click="show = false" class="text-white/70 hover:text-white transition">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    @endif
 
-    <div class=page-content>
+    {{-- 3. KONTEN HALAMAN --}}
+    <main class="page-content">
         @yield('content')
-    </div>
+    </main>
+
+    {{-- 4. MODAL TAMBAHAN --}}
+    @include('partials.register-modal')
 
 </body>
 

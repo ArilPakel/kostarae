@@ -1,61 +1,47 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
-// PUBLIC CONTROLLERS
-use App\Http\Controllers\KostController;
-use App\Http\Controllers\PageController;
-use App\Http\Controllers\RegisterController;
-use App\Http\Controllers\UserAuthController;
-use App\Http\Controllers\ReviewUserController;
-
-// ADMIN CONTROLLERS
-use App\Http\Controllers\Admin\AuthController as AdminAuthController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\KostController as KostAdminController;
-use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\OwnerController;
-use App\Http\Controllers\Admin\PagesController;
-use App\Http\Controllers\Admin\ReportController;
-use App\Http\Controllers\Admin\ReviewController;
-use App\Http\Controllers\Admin\ActivityController;
-
+use Illuminate\Foundation\Auth\EmailVerificationRequest;
 
 /*
 |--------------------------------------------------------------------------
-| PUBLIC KOST
+| IMPORT CONTROLLERS
 |--------------------------------------------------------------------------
 */
-Route::get('/kost', [KostController::class, 'publicList'])->name('kost.public');
-Route::get('/kost/detail/{id}', [KostController::class, 'publicShow'])->name('kost.detail');
 
-Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])->name('review.store');
-Route::put('/review/{id}', [ReviewUserController::class, 'update'])->name('review.update');
-Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.delete');
+// Public & User
+use App\Http\Controllers\{
+    PageController,
+    KostController,
+    ContactController,
+    RegisterController,
+    UserAuthController,
+    GoogleController,
+    UserProfileController,
+    ReviewUserController,
+    OwnerProfileController,
+    ProfileController
+};
+
+// Admin
+use App\Http\Controllers\Admin\{
+    AuthController as AdminAuthController,
+    DashboardController,
+    KostController as AdminKostController,
+    UserController,
+    OwnerController,
+    PagesController as AdminPagesController,
+    ReportController,
+    ReviewController,
+    ActivityController,
+    MessageController
+};
+
+use App\Models\Report;
 
 /*
 |--------------------------------------------------------------------------
-| PEMILIK KOST
-|--------------------------------------------------------------------------
-*/
-Route::middleware(['auth', 'role:pemilik'])
-    ->prefix('pemilik')->name('pemilik.')
-    ->group(function () {
-
-        Route::get('/dashboard', function () {
-            return view('dashboard.pemilik');
-        })->name('dashboard');
-
-        Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])
-            ->name('kost.deletePhoto');
-
-        Route::resource('kost', KostController::class)
-            ->names('kost');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| PUBLIC PAGES
+| 1. PUBLIC ROUTES
 |--------------------------------------------------------------------------
 */
 Route::get('/', [PageController::class, 'home'])->name('home');
@@ -63,79 +49,160 @@ Route::get('/sdank', [PageController::class, 'sdank'])->name('sdank');
 Route::get('/panduan', [PageController::class, 'panduan'])->name('panduan');
 Route::get('/kontak', [PageController::class, 'kontak'])->name('kontak');
 
-/*
-|--------------------------------------------------------------------------
-| USER DASHBOARD
-|--------------------------------------------------------------------------
-*/
-Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn () => view('dashboard.user'))->name('dashboard');
-});
+Route::post('/kontak/kirim', [ContactController::class, 'store'])->name('kontak.store');
+
+Route::get('/kost', [KostController::class, 'publicList'])->name('kost.public');
+Route::get('/kost/detail/{id}', [KostController::class, 'publicShow'])->name('kost.detail');
 
 /*
 |--------------------------------------------------------------------------
-| USER REGISTER & LOGIN
+| 2. AUTHENTICATION (USER)
 |--------------------------------------------------------------------------
 */
+Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
+Route::post('/login', [UserAuthController::class, 'login'])->name('login.submit');
+Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
+
+// Register
 Route::get('/register/user', [RegisterController::class, 'showUserForm'])->name('register.user');
 Route::post('/register/user', [RegisterController::class, 'registerUser'])->name('register.user.submit');
 
 Route::get('/register/owner', [RegisterController::class, 'showOwnerForm'])->name('register.owner');
 Route::post('/register/owner', [RegisterController::class, 'registerOwner'])->name('register.owner.submit');
 
-Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [UserAuthController::class, 'login'])->name('login.submit');
-Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
+// Google Auth
+Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
+Route::get('/auth/google/redirect/{role}', [GoogleController::class, 'redirectToGoogle'])
+    ->where('role', 'pencari|pemilik')
+    ->name('google.redirect');
+
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN LOGIN
+| 3. ADMIN AUTH
 |--------------------------------------------------------------------------
 */
-Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
+Route::prefix('admin')->name('admin.')->group(function () {
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.submit');
+});
 
 /*
 |--------------------------------------------------------------------------
-| ADMIN AREA
+| 4. AUTHENTICATED USER AREA
 |--------------------------------------------------------------------------
 */
-Route::middleware('admin')
-    ->prefix('admin')->name('admin.')
-    ->group(function () {
+Route::middleware(['auth'])->group(function () {
 
-        // Dashboard
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', fn () => view('dashboard.user'))->name('dashboard');
 
-        // Extra actions Kost (Approve / Reject)
-        Route::patch('/kost/{kost}/approve', [KostAdminController::class, 'approve'])->name('kost.approve');
-        Route::patch('/kost/{kost}/reject', [KostAdminController::class, 'reject'])->name('kost.reject');
-
-        // Fitur "Panding")
-        Route::put('/admin/kost/{id}/reset', [AdminKostController::class, 'resetStatus'])->name('admin.kost.reset');
-
-        // Route untuk menghapus kost
-        Route::delete('/admin/kost/{id}/delete', [AdminKostController::class, 'destroy'])->name('admin.kost.destroy');
-
-        // CRUD Kost Admin (AUTO -> admin.kost.*)
-        Route::resource('kost', KostAdminController::class)->names('kost');
-
-        // Admin Users
-        Route::resource('users', UserController::class)->names('users');
-
-        // Admin Owners
-        Route::resource('owners', OwnerController::class)->names('owners');
-
-        // Static Pages
-        Route::get('/pages/terms', [PagesController::class, 'terms'])->name('pages.terms');
-        Route::get('/pages/contact', [PagesController::class, 'contact'])->name('pages.contact');
-        Route::get('/pages/guide', [PagesController::class, 'guide'])->name('pages.guide');
-
-        // Reviews, Reports, Activity
-        Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
-
-        // Admin Logout
-        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+    // Profile
+    Route::prefix('user')->group(function () {
+        Route::get('/profile', [UserProfileController::class, 'index'])->name('user.profile');
+        Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('profile.edit');
+        Route::put('/profile/update', [UserProfileController::class, 'update'])->name('profile.update');
     });
+
+    // Security
+    Route::get('/user/security/password', [ProfileController::class, 'editPassword'])->name('password.edit');
+    Route::put('/user/security/password', [ProfileController::class, 'updatePassword'])->name('password.update');
+
+    // Email Verification
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+
+        return redirect()->route(
+            $request->user()->role === 'pemilik'
+                ? 'owner.profile'
+                : 'user.profile'
+        )->with('status', 'Email berhasil diverifikasi!');
+    })->middleware('signed')->name('verification.verify');
+
+    Route::post('/email/verification-notification', [UserProfileController::class, 'resendVerification'])
+        ->middleware('throttle:3,1')
+        ->name('verification.send');
+
+    // Review
+    Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])->name('review.store');
+    Route::put('/review/{id}', [ReviewUserController::class, 'update'])->name('review.update');
+    Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.delete');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 5. PEMILIK KOST AREA
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->name('pemilik.')->group(function () {
+
+    Route::get('/dashboard', [OwnerProfileController::class, 'index'])->name('dashboard');
+
+    Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])->name('kost.deletePhoto');
+    Route::resource('kost', KostController::class)->names('kost');
+});
+
+/*
+|--------------------------------------------------------------------------
+| 6. ADMIN PANEL
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+
+    // Kost Management
+    Route::resource('kost', AdminKostController::class)->names('kost');
+
+    Route::controller(AdminKostController::class)->group(function () {
+        Route::patch('/kost/{id}/update-status', 'updateStatus')->name('kost.updateStatus');
+        Route::post('/kost/{id}/approve', 'approve')->name('kost.approve');
+        Route::post('/kost/{id}/reject', 'reject')->name('kost.reject');
+        Route::post('/kost/bulk-action', 'bulkAction')->name('kost.bulk');
+        Route::put('/kost/{id}/reset', 'resetStatus')->name('kost.reset');
+        Route::put('/kost/{id}/force-reset', 'forceReset')->name('kost.force_reset');
+        Route::post('/kost/promotion/{id}', 'promote')->name('kost.promote');
+    });
+
+    // Users & Owners
+    Route::resource('users', UserController::class)->names('users');
+    Route::resource('owners', OwnerController::class)->names('owners');
+
+    Route::controller(OwnerController::class)->group(function () {
+        Route::get('/owners/{id}', 'show')->name('owners.show');
+        Route::post('/owners/{id}/notes', 'updateNotes')->name('owners.notes');
+        Route::patch('/owners/{id}/status', 'toggleStatus')->name('owners.status');
+        Route::delete('/owners/{id}', 'destroy')->name('owners.destroy');
+    });
+
+    // Reviews
+    Route::get('/reviews/export', [ReviewController::class, 'exportPdf'])->name('reviews.export');
+    Route::patch('/reviews/{id}/toggle', [ReviewController::class, 'toggleVisibility'])->name('reviews.toggle');
+    Route::resource('reviews', ReviewController::class)->only(['index', 'destroy'])->names('reviews');
+    
+
+    // Pages
+    Route::prefix('pages')->name('pages.')->controller(AdminPagesController::class)->group(function () {
+        Route::get('/terms', 'terms')->name('terms');
+        Route::get('/contact', 'contact')->name('contact');
+        Route::get('/guide', 'guide')->name('guide');
+    });
+
+    // Reports & Activity
+    Route::get('/reports/export', [ReportController::class, 'exportPdf'])->name('reports.export');
+    Route::resource('reports', ReportController::class)->only(['index', 'show'])->names('reports');
+
+    Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
+    Route::get('/activity/{id}', [ActivityController::class, 'show'])->name('activity.show');
+
+    // Pesan Masuk
+    Route::get('/pesan-masuk', function () {
+        $reports = Report::latest()->get();
+        return view('admin.pesan.index', compact('reports'));
+    })->name('pesan.index');
+
+    Route::resource('messages', MessageController::class);
+
+    Route::get('/admin/reports/export', [App\Http\Controllers\Admin\ReportController::class, 'exportPdf'])->name('admin.reports.export');
+});

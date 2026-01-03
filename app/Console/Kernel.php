@@ -4,6 +4,7 @@ namespace App\Console;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Spatie\Activitylog\Models\ActivityLog;
 
 class Kernel extends ConsoleKernel
 {
@@ -12,7 +13,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // Contoh bawaan Laravel
         // $schedule->command('inspire')->hourly();
+
+        // ✅ PERBAIKAN: Command HARUS di dalam method schedule()
+        $schedule->command('model:prune', [
+            '--model' => [ActivityLog::class],
+        ])->monthly();
     }
 
     /**

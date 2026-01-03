@@ -114,7 +114,9 @@
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="font-semibold text-gray-900">{{ $review->user->name }}</p>
-                                <p class="text-xs text-gray-400">{{ $review->created_at->diffForHumans() }}</p>
+                                <p class="text-xs text-gray-400">
+                                    {{ $review->created_at ? $review->created_at->diffForHumans() : '-' }}
+                                </p>
                             </div>
                             <div class="flex items-center">
                                 @for($i=1;$i<=5;$i++)
