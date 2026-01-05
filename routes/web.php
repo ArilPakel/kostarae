@@ -59,6 +59,7 @@ Route::get('/kost/detail/{id}', [KostController::class, 'publicShow'])->name('ko
 | 2. AUTHENTICATION (USER)
 |--------------------------------------------------------------------------
 */
+// Login / Logout
 Route::get('/login', [UserAuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [UserAuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [UserAuthController::class, 'logout'])->name('logout');
@@ -90,7 +91,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 4. AUTHENTICATED USER AREA
+| 4. AUTHENTICATED USER (UMUM)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth'])->group(function () {
@@ -113,9 +114,7 @@ Route::middleware(['auth'])->group(function () {
         $request->fulfill();
 
         return redirect()->route(
-            $request->user()->role === 'pemilik'
-                ? 'owner.profile'
-                : 'user.profile'
+            $request->user()->role === 'pemilik' ? 'owner.profile' : 'user.profile'
         )->with('status', 'Email berhasil diverifikasi!');
     })->middleware('signed')->name('verification.verify');
 
@@ -123,7 +122,7 @@ Route::middleware(['auth'])->group(function () {
         ->middleware('throttle:3,1')
         ->name('verification.send');
 
-    // Review
+    // Review Actions
     Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])->name('review.store');
     Route::put('/review/{id}', [ReviewUserController::class, 'update'])->name('review.update');
     Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.delete');
@@ -131,15 +130,27 @@ Route::middleware(['auth'])->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 5. PEMILIK KOST AREA
+| 5. PEMILIK KOST AREA (OWNER)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->name('pemilik.')->group(function () {
+// Disini kita pakai trik agar 'owner.profile' jalan, tapi resource tetap 'pemilik.kost.*'
+Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->group(function () {
 
-    Route::get('/dashboard', [OwnerProfileController::class, 'index'])->name('dashboard');
+    // 1. Group untuk Resource KOST (Pakai nama 'pemilik.')
+    // Ini memperbaiki error [pemilik.kost.create]
+    Route::name('pemilik.')->group(function () {
+        Route::get('/dashboard', [OwnerProfileController::class, 'index'])->name('dashboard');
+        
+        // Route ini menjadi 'pemilik.profile'
+        Route::get('/profil', [OwnerProfileController::class, 'index'])->name('profile');
 
-    Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])->name('kost.deletePhoto');
-    Route::resource('kost', KostController::class)->names('kost');
+        Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])->name('kost.deletePhoto');
+        Route::resource('kost', KostController::class); 
+    });
+
+    // 2. Route Alias untuk Profile (Pakai nama 'owner.profile')
+    // Ini memperbaiki error [owner.profile] di Navbar
+    Route::get('/profil', [OwnerProfileController::class, 'index'])->name('owner.profile');
 });
 
 /*
@@ -170,18 +181,15 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::resource('owners', OwnerController::class)->names('owners');
 
     Route::controller(OwnerController::class)->group(function () {
-        Route::get('/owners/{id}', 'show')->name('owners.show');
         Route::post('/owners/{id}/notes', 'updateNotes')->name('owners.notes');
         Route::patch('/owners/{id}/status', 'toggleStatus')->name('owners.status');
-        Route::delete('/owners/{id}', 'destroy')->name('owners.destroy');
     });
 
-    // Reviews
+    // Reviews (Export sebelum Resource)
     Route::get('/reviews/export', [ReviewController::class, 'exportPdf'])->name('reviews.export');
     Route::patch('/reviews/{id}/toggle', [ReviewController::class, 'toggleVisibility'])->name('reviews.toggle');
     Route::resource('reviews', ReviewController::class)->only(['index', 'destroy'])->names('reviews');
     
-
     // Pages
     Route::prefix('pages')->name('pages.')->controller(AdminPagesController::class)->group(function () {
         Route::get('/terms', 'terms')->name('terms');
@@ -204,5 +212,4 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
 
     Route::resource('messages', MessageController::class);
 
-    Route::get('/admin/reports/export', [App\Http\Controllers\Admin\ReportController::class, 'exportPdf'])->name('admin.reports.export');
-});
+}); // <--- Ini tutup kurung ADMIN yang tadi hilang/unclosed
