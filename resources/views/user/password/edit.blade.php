@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-12 font-sans flex items-center justify-center">
+<div class="min-h-screen bg-gray-50 py-20 font-sans flex items-center justify-center">
     <div class="w-full max-w-lg px-4">
 
         {{-- Header Sederhana --}}
@@ -61,7 +61,7 @@
 
                 {{-- Tombol Batal / Kembali --}}
                 <div class="mt-6 text-center">
-                    <a href="{{ Auth::user()->role === 'pemilik' ? route('owner.profile') : route('user.profile') }}" class="text-sm text-gray-400 hover:text-gray-600 font-medium">
+                    <a href="{{ Auth::user()->role === 'pemilik' ? route('pemilik.profile') : route('user.profile') }}" class="text-sm text-gray-400 hover:text-gray-600 font-medium">
                         &larr; Kembali ke Profil
                     </a>
                 </div>

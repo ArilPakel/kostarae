@@ -172,4 +172,11 @@ class Kost extends Model
             ->logOnlyDirty()
             ->setDescriptionForEvent(fn(string $eventName) => "Data Kost ini telah di-{$eventName}");
     }
+
+    public function views()
+    {
+    return $this->hasMany(\App\Models\KostView::class);
+    }
+
+
 }

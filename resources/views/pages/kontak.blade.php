@@ -20,7 +20,7 @@
                 <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             </div>
             <h3 class="text-xl font-bold text-gray-800 mb-2">Laporan Diterima!</h3>
-            <p class="text-gray-500 text-sm mb-6">Terima kasih, tim Kost'Ta akan segera memproses pesan Anda.</p>
+            <p class="text-gray-500 text-sm mb-6">Terima kasih, tim Kostarae akan segera memproses pesan Anda.</p>
             <button @click="showModal = false" class="w-full bg-[#E07B3C] text-white font-bold py-3 rounded-xl hover:bg-[#cf6f32] transition shadow-lg">
                 Tutup
             </button>
@@ -53,7 +53,7 @@
                     <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-[#E07B3C] rounded-full opacity-20 blur-3xl"></div>
                     <div>
                         <h3 class="text-2xl font-bold mb-6">Informasi Kontak</h3>
-                        <p class="text-gray-300 mb-8 leading-relaxed">Tim support Kost'Ta siap membantu Anda pada jam kerja (24/7).</p>
+                        <p class="text-gray-300 mb-8 leading-relaxed">Tim support Kostarae siap membantu Anda pada jam kerja (24/7).</p>
                         <div class="space-y-6">
                             <div class="flex items-start gap-4">
                                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
@@ -65,7 +65,7 @@
                                 <div class="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
                                     <svg class="w-5 h-5 text-[#E07B3C]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
                                 </div>
-                                <div><h4 class="font-bold text-white">Email</h4><p class="text-gray-300 text-sm">kostta.support@gmail.com</p></div>
+                                <div><h4 class="font-bold text-white">Email</h4><p class="text-gray-300 text-sm">KostTarae`@.com</p></div>
                             </div>
                         </div>
                     </div>

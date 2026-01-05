@@ -3,7 +3,6 @@
 @section('content')
     <style>
         html { scroll-behavior: smooth; }
-        /* Jarak scroll agar judul tidak tertutup navbar fixed */
         section { scroll-margin-top: 120px; }
     </style>
 
@@ -19,7 +18,7 @@
                 Syarat & Ketentuan
             </h1>
             <p class="text-gray-200 text-lg max-w-2xl mx-auto leading-relaxed">
-                Harap membaca syarat dan ketentuan ini dengan saksama sebelum menggunakan platform Kost'Ta.
+                Harap membaca syarat dan ketentuan ini dengan saksama sebelum menggunakan platform Kostarae.
             </p>
             
             <div class="mt-6 inline-block px-4 py-1 rounded-full bg-white/10 border border-white/20 text-sm text-gray-200 backdrop-blur-sm">
@@ -74,7 +73,7 @@
                             <h2 class="text-xl font-bold text-gray-800">Pendahuluan</h2>
                         </div>
                         <p class="text-gray-600 text-sm md:text-base leading-relaxed text-justify">
-                            Selamat datang di <strong>Kost'Ta</strong> (selanjutnya disebut "Platform"). Platform ini dikelola untuk memfasilitasi pertemuan informasi antara Penyewa (Pencari Kost) dan Pemilik Properti (Pemilik Kost). Dengan menggunakan layanan ini, Anda dianggap menyetujui seluruh aturan yang berlaku.
+                            Selamat datang di <strong>Kostarae</strong> (selanjutnya disebut "Platform"). Platform ini dikelola untuk memfasilitasi pertemuan informasi antara Penyewa (Pencari Kost) dan Pemilik Properti (Pemilik Kost). Dengan menggunakan layanan ini, Anda dianggap menyetujui seluruh aturan yang berlaku.
                         </p>
                     </section>
 
@@ -88,7 +87,7 @@
                         <ul class="space-y-2 text-gray-600 text-sm md:text-base list-disc pl-5">
                             <li>Pengguna wajib memberikan data identitas yang valid dan akurat.</li>
                             <li>Kerahasiaan kata sandi (password) adalah tanggung jawab penuh pengguna.</li>
-                            <li>Kost'Ta berhak membekukan akun yang terindikasi melakukan pelanggaran.</li>
+                            <li>Kostarae berhak membekukan akun yang terindikasi melakukan pelanggaran.</li>
                         </ul>
                     </section>
 
@@ -124,7 +123,7 @@
                         </div>
                         <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
                             <p class="text-sm text-yellow-800 font-medium">
-                                ⚠️ Marketplace Only: Kost'Ta adalah perantara informasi.
+                                ⚠️ Marketplace Only: Kostarae adalah perantara informasi.
                             </p>
                         </div>
                         <p class="text-gray-600 text-sm md:text-base text-justify">

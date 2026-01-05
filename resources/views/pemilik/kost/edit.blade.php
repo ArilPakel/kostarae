@@ -1,7 +1,7 @@
 @extends('layouts.owner')
 
 @section('content')
-<div class="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+<div class="max-w-4xl mx-auto p-6 py-20 bg-white shadow-md rounded-lg">
 
     <h2 class="text-2xl font-bold mb-6">Edit Kost</h2>
 

@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Kost; // Pastikan Model Kost sudah ada
+use App\Models\Kost; 
 
 class OwnerProfileController extends Controller
 {
@@ -14,7 +14,7 @@ class OwnerProfileController extends Controller
 
         // Ambil data kost milik user ini (Eager loading untuk performa)
         // Asumsi relasi di Model User: public function kosts() { return $this->hasMany(Kost::class); }
-        $kosts = Kost::where('user_id', $user->id)->latest()->get();
+        $kosts = Kost::where('pemilik_id', $user->id)->latest()->get();
 
         // Hitung Statistik Sederhana
         $stats = [

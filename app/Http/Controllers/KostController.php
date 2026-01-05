@@ -7,41 +7,43 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Models\KostView;
+
 
 class KostController extends Controller
 {
-    // INDEX
+    /* =======================
+     *  PEMILIK AREA
+     * ======================= */
     public function index()
     {
-        $kosts = Kost::where('pemilik_id', Auth::id())->latest()->get();
+        $kosts = Kost::where('pemilik_id', Auth::id())
+            ->latest()
+            ->get();
 
         return view('pemilik.kost.index', compact('kosts'));
     }
 
-    // CREATE
     public function create()
     {
         return view('pemilik.kost.create');
     }
 
-    // STORE
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'alamat' => 'required|string',
-            'harga' => 'required|numeric|min:0',
-            'tipe' => 'required|string',
-            'fasilitas' => 'nullable|array',
-            'foto.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'nama'       => 'required|string|max:255',
+            'alamat'     => 'required|string',
+            'harga'      => 'required|numeric|min:0',
+            'tipe'       => 'required|string',
+            'fasilitas'  => 'nullable|array',
+            'foto.*'     => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
         $fotoPaths = [];
-
-        // Upload foto
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $file) {
-                $filename = time().'-'.Str::random(10).'.'.$file->getClientOriginalExtension();
+                $filename = now()->timestamp . '-' . Str::random(8) . '.' . $file->extension();
                 $file->storeAs('public/kost', $filename);
                 $fotoPaths[] = "storage/kost/$filename";
             }
@@ -49,136 +51,148 @@ class KostController extends Controller
 
         Kost::create([
             'pemilik_id' => Auth::id(),
-            'nama' => $validated['nama'],
-            'alamat' => $validated['alamat'],
-            'harga' => $validated['harga'],
-            'tipe' => $request->tipe,
-            'fasilitas' => $request->fasilitas ?? [],
-            'foto' => $fotoPaths,
-            'status' => 'pending',
+            'nama'       => $validated['nama'],
+            'alamat'     => $validated['alamat'],
+            'harga'      => $validated['harga'],
+            'tipe'       => $validated['tipe'],
+            'fasilitas'  => $validated['fasilitas'] ?? [],
+            'foto'       => $fotoPaths,
+            'status'     => 'pending',
         ]);
 
-        return redirect()->route('pemilik.kost.index')
-            ->with('success', 'Kost berhasil ditambahkan!');
+        return redirect()
+            ->route('pemilik.kost.index')
+            ->with('success', 'Kost berhasil ditambahkan dan menunggu persetujuan admin.');
     }
 
-    // EDIT
     public function edit($id)
     {
         $kost = Kost::where('pemilik_id', Auth::id())->findOrFail($id);
-
         return view('pemilik.kost.edit', compact('kost'));
     }
 
-    // UPDATE
     public function update(Request $request, $id)
     {
         $kost = Kost::where('pemilik_id', Auth::id())->findOrFail($id);
 
         $validated = $request->validate([
-            'nama' => 'required|string|max:255',
-            'alamat' => 'required|string',
-            'harga' => 'required|numeric|min:0',
-            'tipe' => 'required|string',
-            'fasilitas' => 'nullable|array',
-            'foto.*' => 'image|mimes:jpg,jpeg,png|max:2048',
+            'nama'       => 'required|string|max:255',
+            'alamat'     => 'required|string',
+            'harga'      => 'required|numeric|min:0',
+            'tipe'       => 'required|string',
+            'fasilitas'  => 'nullable|array',
+            'foto.*'     => 'image|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $oldPhotos = $kost->foto ?? [];
-
-        // Upload foto baru
+        $foto = $kost->foto ?? [];
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $file) {
-                $filename = time().'-'.Str::random(8).'.'.$file->getClientOriginalExtension();
+                $filename = now()->timestamp . '-' . Str::random(8) . '.' . $file->extension();
                 $file->storeAs('public/kost', $filename);
-                $oldPhotos[] = "storage/kost/$filename";
+                $foto[] = "storage/kost/$filename";
             }
         }
 
         $kost->update([
-            'nama' => $validated['nama'],
-            'alamat' => $validated['alamat'],
-            'harga' => $validated['harga'],
-            'tipe' => $request->tipe,
-            'fasilitas' => $request->fasilitas ?? [],
-            'foto' => $oldPhotos,
+            'nama'      => $validated['nama'],
+            'alamat'    => $validated['alamat'],
+            'harga'     => $validated['harga'],
+            'tipe'      => $validated['tipe'],
+            'fasilitas' => $validated['fasilitas'] ?? [],
+            'foto'      => $foto,
+            'status'    => 'pending', // reset review
         ]);
 
-        return redirect()->route('pemilik.kost.index')
-            ->with('success', 'Kost berhasil diperbarui!');
+        return redirect()
+            ->route('pemilik.kost.index')
+            ->with('success', 'Kost berhasil diperbarui dan menunggu persetujuan ulang.');
     }
 
-    // DELETE PHOTO
     public function deletePhoto(Request $request, $id)
     {
         $kost = Kost::where('pemilik_id', Auth::id())->findOrFail($id);
 
-        $fotoArray = $kost->foto ?? [];
-        $filename = $request->foto;
+        $foto = array_filter($kost->foto ?? [], fn($f) => $f !== $request->foto);
 
-        $storagePath = str_replace('storage/', 'public/', $filename);
-
-        if (Storage::exists($storagePath)) {
-            Storage::delete($storagePath);
+        $path = str_replace('storage/', 'public/', $request->foto);
+        if (Storage::exists($path)) {
+            Storage::delete($path);
         }
 
-        // Hapus dari array
-        $fotoArray = array_values(array_filter($fotoArray, fn ($f) => $f !== $filename));
-
-        $kost->update(['foto' => $fotoArray]);
+        $kost->update(['foto' => array_values($foto)]);
 
         return response()->json(['success' => true]);
     }
 
-    // DELETE KOST
     public function destroy($id)
     {
         $kost = Kost::where('pemilik_id', Auth::id())->findOrFail($id);
 
         foreach ($kost->foto ?? [] as $file) {
             $path = str_replace('storage/', 'public/', $file);
-            if (Storage::exists($path)) {
-                Storage::delete($path);
-            }
+            Storage::delete($path);
         }
 
         $kost->delete();
 
-        return redirect()->back()->with('success', 'Kost berhasil dihapus.');
+        return back()->with('success', 'Kost berhasil dihapus.');
+    }
+
+    /* =======================
+     *  PUBLIC AREA (PENCARIAN)
+     * ======================= */
+    public function publicList(Request $request)
+    {
+        $query = Kost::where('status', 'diterima');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('alamat', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('harga', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('harga', '<=', $request->max_price);
+        }
+
+        if ($request->filled('tipe')) {
+            $query->where('tipe', $request->tipe);
+        }
+
+        if ($request->filled('kelengkapan')) {
+            $query->whereJsonContains('fasilitas', $request->kelengkapan);
+        }
+
+        $kosts = $query->latest()->paginate(12)->withQueryString();
+
+        return view('kost.pencarian', compact('kosts'));
     }
 
     public function publicShow($id)
     {
-        $kost = Kost::findOrFail($id);
+        $kost = Kost::with(['reviews.user'])
+            ->active()
+            ->findOrFail($id);
 
-        
-        $kost->foto = is_array($kost->foto) ? $kost->foto : json_decode($kost->foto, true);
-        $kost->fasilitas = is_array($kost->fasilitas) ? $kost->fasilitas : json_decode($kost->fasilitas, true);
-
-        return view('kost.detail', compact('kost')); 
-    }
-
-    public function publicList(Request $request)
-    {
-        // 1. Ambil data kost yang statusnya aktif (tersedia)
-        // Pastikan Model Kost sudah di-import di atas: use App\Models\Kost;
-        $query = \App\Models\Kost::where('status', 'active'); // Sesuaikan 'active' dengan status di database Anda
-
-        // 2. Fitur Pencarian Sederhana (Opsional)
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%");
-            });
+        // Simpan view hanya untuk user biasa
+        if (Auth::check() && Auth::user()->role === 'user') {
+            KostView::updateOrCreate(
+                [
+                    'user_id' => Auth::id(),
+                    'kost_id' => $kost->id,
+                ],
+                [
+                    'updated_at' => now(),
+                ]
+            );
         }
 
-        // 3. Ambil data dengan pagination (9 per halaman)
-        $kosts = $query->latest()->paginate(9);
-
-        // 4. Tampilkan ke view publik
-        // PENTING: Pastikan Anda sudah punya file view di: resources/views/kost/index.blade.php
-        // (Jangan gunakan view milik pemilik di 'pemilik.kost.index')
-        return view('kost.index', compact('kosts'));
+        return view('kost.detail', compact('kost'));
     }
 }
