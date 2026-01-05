@@ -20,6 +20,8 @@ use App\Http\Controllers\{
     UserProfileController,
     ReviewUserController,
     OwnerProfileController,
+    PesananController,
+    UserDashboardController,
     ProfileController
 };
 
@@ -53,6 +55,8 @@ Route::post('/kontak/kirim', [ContactController::class, 'store'])->name('kontak.
 
 Route::get('/kost', [KostController::class, 'publicList'])->name('kost.public');
 Route::get('/kost/detail/{id}', [KostController::class, 'publicShow'])->name('kost.detail');
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -96,7 +100,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
 */
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/dashboard', fn () => view('dashboard.user'))->name('dashboard');
+   // DASHBOARD USER
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])
+        ->name('dashboard');
 
     // Profile
     Route::prefix('user')->group(function () {
@@ -126,7 +132,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])->name('review.store');
     Route::put('/review/{id}', [ReviewUserController::class, 'update'])->name('review.update');
     Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.delete');
-});
+
+    // ===============================
+    // PESANAN KOST (USER)
+    // ===============================
+    Route::post('/pesanan/{kost}', [PesananController::class, 'store'])
+        ->name('pesanan.store');
+
+    });
 
 /*
 |--------------------------------------------------------------------------

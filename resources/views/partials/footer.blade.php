@@ -46,9 +46,6 @@
             <div>
                 <h6 class="uppercase font-semibold mb-3 text-sm">Contact Information</h6>
                 <p class="flex items-center gap-2 text-gray-300 mb-1">
-                    <i class="bi bi-telephone-fill"></i> +62 320 666 790
-                </p>
-                <p class="flex items-center gap-2 text-gray-300 mb-1">
                     <i class="bi bi-envelope-fill"></i> KostTarae`@.com
                 </p>
             </div>

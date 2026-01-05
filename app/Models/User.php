@@ -6,48 +6,69 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use App\Models\Kost; // Pastikan Model Kost di-import
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Models\Kost;
 
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
     use LogsActivity;
 
+    /**
+     * FIELD YANG BOLEH DI-UPDATE
+     */
     protected $fillable = [
         'name',
         'email',
         'password',
         'phone',
-        'address',       // Penting untuk fitur verifikasi WA
-        'role',        // Penting untuk membedakan admin/pemilik
+        'address',
+        'avatar',         
+        'role',
         'google_id',
-        'email_verified_at'
+        'email_verified_at',
     ];
 
+    /**
+     * FIELD TERSEMBUNYI
+     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
     /**
-     * RELASI TAMBAHAN (PENTING)
-     * Agar OwnerController bisa memanggil $user->kosts
+     * CASTING FIELD
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+    /**
+     * RELASI: PEMILIK → BANYAK KOST
      */
     public function kosts()
     {
-        // Parameter kedua 'pemilik_id' adalah nama kolom di tabel 'kosts'
-        // yang menghubungkan ke tabel 'users'
         return $this->hasMany(Kost::class, 'pemilik_id');
     }
 
-    // 3. Konfigurasi Pencatatan (Wajib ada)
+    /**
+     * KONFIGURASI ACTIVITY LOG
+     */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logAll()             // Catat semua field
-            ->logOnlyDirty()       // Hanya catat yang berubah saja
-            ->setDescriptionForEvent(fn(string $eventName) => "Data User ini telah di-{$eventName}");
+            ->logAll()
+            ->logOnlyDirty()
+            ->setDescriptionForEvent(
+                fn (string $eventName) => "Data user telah di-{$eventName}"
+            );
+    }
+
+    public function kostViews()
+    {
+    return $this->hasMany(\App\Models\KostView::class);
     }
 }

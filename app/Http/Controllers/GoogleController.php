@@ -21,52 +21,45 @@ class GoogleController extends Controller
 
     // 2. Fungsi Callback
     public function handleGoogleCallback()
-    {
-        try {
-            // Gunakan stateless() untuk menghindari error invalid state di localhost
-            $googleUser = Socialite::driver('google')->stateless()->user();
-            
-            // Cek apakah user sudah ada di database
-            $user = User::where('google_id', $googleUser->id)
-                        ->orWhere('email', $googleUser->email)
-                        ->first();
+{
+    try {
+        $googleUser = Socialite::driver('google')->user();
 
-            if ($user) {
-                // --- KONDISI A: USER SUDAH TERDAFTAR ---
-                if (!$user->google_id) {
-                    $user->update(['google_id' => $googleUser->id]);
-                }
+        $user = User::where('google_id', $googleUser->id)
+            ->orWhere('email', $googleUser->email)
+            ->first();
 
-                Auth::login($user);
-                
-                // Redirect sesuai role ASLI di database
-                return $this->redirectBasedOnRole($user->role);
-
-            } else {
-                // --- KONDISI B: USER BARU ---
-                
-                // Ambil role dari session, default ke 'pencari' jika session expired
-                $role = session('register_role', 'pencari');
-
-                $newUser = User::create([
-                    'name' => $googleUser->name,
-                    'email' => $googleUser->email,
-                    'google_id' => $googleUser->id,
-                    'role' => $role,
-                    'password' => null,
-                    'email_verified_at' => now(),
-                ]);
-
-                Auth::login($newUser);
-                session()->forget('register_role');
-
-                return $this->redirectBasedOnRole($newUser->role);
+        if ($user) {
+            if (!$user->google_id) {
+                $user->update(['google_id' => $googleUser->id]);
             }
 
-        } catch (Exception $e) {
-            return redirect()->route('login')->with('error', 'Login Google Gagal: ' . $e->getMessage());
+            Auth::login($user);
+            return $this->redirectBasedOnRole($user->role);
         }
+
+        $role = session('register_role', 'pencari');
+
+        $newUser = User::create([
+            'name' => $googleUser->name,
+            'email' => $googleUser->email,
+            'google_id' => $googleUser->id,
+            'role' => $role,
+            'password' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        Auth::login($newUser);
+        session()->forget('register_role');
+
+        return $this->redirectBasedOnRole($newUser->role);
+
+    } catch (Exception $e) {
+        return redirect()->route('login')
+            ->with('error', 'Login Google gagal, silakan coba lagi.');
     }
+}
+
 
     // Helper function
     protected function redirectBasedOnRole($role)

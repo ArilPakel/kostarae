@@ -9,17 +9,20 @@ return new class extends Migration {
     {
         Schema::create('kosts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pemilik_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('pemilik_id')
+                  ->constrained('users')
+                  ->onDelete('cascade');
+
             $table->string('nama');
             $table->text('alamat');
             $table->unsignedBigInteger('harga')->default(0);
             $table->string('tipe')->nullable(); 
             $table->json('fasilitas')->nullable();
-            $table->json('foto')->nullable();
-            $table->enum('status', ['pending','diterima','ditolak'])->default('pending');
-            $table->json('foto');
+            $table->json('foto')->nullable(); 
+            $table->enum('status', ['pending','diterima','ditolak'])
+                  ->default('pending');
+
             $table->timestamps();
-            
         });
     }
 
