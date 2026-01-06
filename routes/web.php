@@ -79,7 +79,7 @@ Route::post('/register/owner', [RegisterController::class, 'registerOwner'])->na
 // Google Auth
 Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle'])->name('google.login');
 Route::get('/auth/google/redirect/{role}', [GoogleController::class, 'redirectToGoogle'])
-    ->where('role', 'pencari|pemilik')
+    ->where('role', 'user|pemilik')
     ->name('google.redirect');
 Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback'])->name('google.callback');
 
@@ -100,7 +100,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 | 4. AUTHENTICATED USER (PENCARI KOST)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'role:user'])->group(function () {
 
     // Dashboard User
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
@@ -129,7 +129,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('verification.send');
 
     // Review Actions
-    Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])->name('review.store');
+    Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])
+        ->name('review.store');
     Route::put('/review/{id}', [ReviewUserController::class, 'update'])->name('review.update');
     Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.delete');
 
