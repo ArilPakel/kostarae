@@ -13,12 +13,13 @@ class KostController extends Controller
     // 1. INDEX
     public function index(Request $request)
     {
+        // Pastikan relasi di Model Kost bernama 'pemilik' (public function pemilik() { return $this->belongsTo(User::class, 'pemilik_id'); })
         $query = Kost::with('pemilik')->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
+                $q->where('nama', 'like', "%{$search}%") // Pastikan kolom database 'nama' atau 'nama_kost'
                   ->orWhere('alamat', 'like', "%{$search}%");
             });
         }
@@ -40,11 +41,12 @@ class KostController extends Controller
     // 2. SHOW
     public function show($id)
     {
-        // Pastikan mengambil relasi 'user' (pemilik) agar tidak error
-        $kost = \App\Models\Kost::with(['user', 'reviews'])->findOrFail($id);
+        // PERBAIKAN: Konsisten menggunakan relasi 'pemilik'
+        $kost = Kost::with(['pemilik', 'reviews'])->findOrFail($id);
         
         return view('admin.kost.show', compact('kost'));
     }
+
     // 3. APPROVE
     public function approve($id)
     {
@@ -70,14 +72,14 @@ class KostController extends Controller
     // 6. CREATE
     public function create()
     {
-        $users = User::where('role', '!=', 'admin')->get();
+        $users = User::where('role', 'pemilik')->get();
         return view('admin.kost.create', compact('users'));
     }
 
-    // 7. STORE
+    // 7. STORE (BAGIAN YANG DIPERBAIKI TOTAL)
     public function store(Request $request)
     {
-        // A. Update nomor WA jika ada
+        // A. Update nomor WA jika ada request update
         if ($request->filled('owner_phone_update')) {
             $request->validate([
                 'owner_phone_update' => 'numeric|digits_between:10,15'
@@ -86,50 +88,56 @@ class KostController extends Controller
                 ->update(['phone' => $request->owner_phone_update]);
         }
 
-        // B. Pastikan pemilik punya WA
+        // B. Pastikan pemilik punya WA (Cek ulang setelah update)
         $pemilik = User::findOrFail($request->pemilik_id);
         if (empty($pemilik->phone)) {
             return back()->withInput()
                 ->with('error', 'Pemilik belum memiliki nomor WhatsApp.');
         }
 
-        // C. Bersihkan harga
+        // C. Bersihkan harga (Hapus titik/koma)
         $cleanHarga = str_replace(['.', ','], '', $request->harga);
 
-        // D. Validasi
+        // D. Validasi Input
         $request->validate([
             'pemilik_id' => 'required|exists:users,id',
-            'nama'       => 'required|string|max:255',
+            'nama'       => 'required|string|max:255', // Sesuaikan dengan name="nama" di form
             'alamat'     => 'required|string',
-            'harga'      => 'required|numeric',
+            'harga'      => 'required',
             'tipe'       => 'required|string',
             'foto'       => 'required|array|min:1|max:5',
             'foto.*'     => 'image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
-            'foto.max' => 'Maksimal upload 5 foto.',
+            'foto.max'   => 'Maksimal upload 5 foto.',
             'foto.*.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
         // E. Upload Foto
         $fotoPaths = [];
-        if ($request->hasFile('foto')) {
-            foreach ($request->file('foto') as $file) {
-                if ($file->isValid()) {
-                    $fotoPaths[] = $file->store('kost-images', 'public');
-                }
+        if($request->hasFile('foto')) {
+            foreach($request->file('foto') as $file) {
+                // Simpan ke storage/app/public/kosts
+                $path = $file->store('kosts', 'public'); 
+                $fotoPaths[] = $path;
             }
         }
 
-        // F. Simpan Data
+        // F. Simpan Data ke Database
+        // ✅ PERBAIKAN: Langsung masukkan hasil upload ke create()
+        // Jangan panggil $kost->save() sebelum variabelnya ada.
         Kost::create([
             'pemilik_id' => $request->pemilik_id,
-            'nama'       => $request->nama,
+            'nama'  => $request->nama, // Pastikan kolom DB 'nama_kost' atau 'nama'. Sesuaikan disini.
             'alamat'     => $request->alamat,
             'harga'      => $cleanHarga,
-            'tipe'       => $request->tipe,
-            'fasilitas'  => $request->fasilitas ?? [],
-            'foto'       => $fotoPaths,
+            'tipe_kost'  => $request->tipe, // Pastikan kolom DB 'tipe_kost' atau 'tipe'.
+            'fasilitas'  => json_encode($request->fasilitas ?? []), // Encode array ke JSON
+            'foto'       => json_encode($fotoPaths),            // Encode array path foto ke JSON
             'status'     => 'pending',
+            'deskripsi'  => $request->deskripsi,
+            'kota'       => $request->kota,
+            'kecamatan'  => $request->kecamatan,
+            'kelurahan'  => $request->kelurahan,
         ]);
 
         return redirect()
@@ -143,12 +151,14 @@ class KostController extends Controller
         $kost = Kost::findOrFail($id);
         $users = User::where('role', '!=', 'admin')->get();
         
-        $alamatParts = array_map('trim', explode(',', $kost->alamat));
+        // Cek jika alamat mengandung koma baru di explode, untuk menghindari error offset
+        $alamatParts = explode(',', $kost->alamat);
+        
         $lokasiData = [
-            'detail' => $alamatParts[0] ?? '',
-            'kel'    => $alamatParts[1] ?? '',
-            'kec'    => $alamatParts[2] ?? '',
-            'kota'   => $alamatParts[3] ?? '',
+            'detail' => isset($alamatParts[0]) ? trim($alamatParts[0]) : $kost->alamat,
+            'kel'    => isset($alamatParts[1]) ? trim($alamatParts[1]) : '',
+            'kec'    => isset($alamatParts[2]) ? trim($alamatParts[2]) : '',
+            'kota'   => isset($alamatParts[3]) ? trim($alamatParts[3]) : '',
         ];
 
         return view('admin.kost.edit', compact('kost', 'users', 'lokasiData'));
@@ -159,6 +169,7 @@ class KostController extends Controller
     {
         $kost = Kost::findOrFail($id);
 
+        // Update Pemilik & No HP jika ada
         if($request->has('pemilik_id')) {
             $pemilik = User::findOrFail($request->pemilik_id);
             if ($request->filled('owner_phone_update')) {
@@ -179,42 +190,44 @@ class KostController extends Controller
             'foto.*' => 'image|max:2048',
         ]);
 
-        $currentFotos = $kost->foto ?? [];
+        // Logic Foto: Gabungkan foto lama dengan yang baru (jika ada)
+        // Pastikan foto lama di-decode dulu jika string JSON
+        $currentFotos = is_string($kost->foto) ? json_decode($kost->foto, true) : ($kost->foto ?? []);
         
         if ($request->hasFile('foto')) {
             foreach ($request->file('foto') as $index => $file) {
-                $path = $file->store('kost-images', 'public');
-                $label = $request->foto_labels[$index] ?? 'Foto Tambahan';
-                
-                $currentFotos[] = [
-                    'path' => $path,
-                    'label' => $label
-                ];
+                $path = $file->store('kosts', 'public'); // Samakan foldernya dengan store: 'kosts'
+                // Karena struktur di store array simple, kita push path-nya saja
+                $currentFotos[] = $path; 
             }
         }
 
+        // Logic Fasilitas
         $fasilitas = $request->fasilitas ?? [];
         if ($request->filled('fasilitas_tambahan')) {
             $tambahan = array_map('trim', explode(',', $request->fasilitas_tambahan));
             $fasilitas = array_merge($fasilitas, $tambahan);
         }
 
+        // Logic Alamat
         $kelurahanFinal = $request->filled('kelurahan_manual') ? $request->kelurahan_manual : $request->kelurahan;
         
-        if($request->filled(['alamat_detail', 'kecamatan', 'kota']) || $kelurahanFinal) {
-             $alamatFull = "{$request->alamat_detail}, {$kelurahanFinal}, {$request->kecamatan}, {$request->kota}";
+        if($request->filled(['alamat', 'kecamatan', 'kota']) || $kelurahanFinal) {
+             // Menggunakan input alamat detail, bukan $kost->alamat lama
+             $alamatDetail = $request->alamat ?? ''; 
+             $alamatFull = "{$alamatDetail}, {$kelurahanFinal}, {$request->kecamatan}, {$request->kota}";
         } else {
             $alamatFull = $kost->alamat;
         }
 
         $kost->update([
             'pemilik_id' => $request->pemilik_id ?? $kost->pemilik_id,
-            'nama'       => $request->nama,
+            'nama_kost'  => $request->nama, // Sesuaikan nama kolom DB
             'alamat'     => $alamatFull,
             'harga'      => $cleanHarga,
-            'tipe'       => $request->tipe,
-            'fasilitas'  => $fasilitas,
-            'foto'       => $currentFotos,
+            'tipe_kost'  => $request->tipe, // Sesuaikan nama kolom DB
+            'fasilitas'  => json_encode($fasilitas), // Encode JSON
+            'foto'       => json_encode($currentFotos), // Encode JSON
             'deskripsi'  => ucfirst($request->deskripsi),
         ]);
 
@@ -226,8 +239,12 @@ class KostController extends Controller
     {
         $kost = Kost::findOrFail($id);
         
-        if ($kost->foto && is_array($kost->foto)) {
-            foreach ($kost->foto as $item) {
+        // Decode foto jika JSON string
+        $fotos = is_string($kost->foto) ? json_decode($kost->foto, true) : $kost->foto;
+
+        if ($fotos && is_array($fotos)) {
+            foreach ($fotos as $item) {
+                // Cek apakah item string path atau array (tergantung cara simpan sebelumnya)
                 $path = is_array($item) ? ($item['path'] ?? null) : $item;
                 
                 if ($path && Storage::disk('public')->exists($path)) {
@@ -251,27 +268,24 @@ class KostController extends Controller
     }
 
     // ==========================================
-    // PERBAIKAN UTAMA: METHOD PROMOTE (IKLAN)
+    // METHOD PROMOTE
     // ==========================================
     public function promote(Request $request, $id)
     {
         $kost = Kost::findOrFail($id);
         
-        // 1. Validasi Input (Tanggal Wajib jika is_promoted = true)
         $request->validate([
             'is_promoted' => 'required|boolean',
             'promoted_start_date' => 'nullable|required_if:is_promoted,true|date',
             'promoted_end_date'   => 'nullable|required_if:is_promoted,true|date|after_or_equal:promoted_start_date',
         ]);
 
-        // 2. Update Data
         $kost->update([
             'is_promoted' => $request->is_promoted,
             'promoted_start_date' => $request->is_promoted ? $request->promoted_start_date : null,
             'promoted_end_date'   => $request->is_promoted ? $request->promoted_end_date : null,
         ]);
 
-        // 3. Return JSON (PENTING: Agar AJAX Frontend Berhasil)
         return response()->json([
             'status' => 'success',
             'message' => 'Status promosi berhasil diperbarui!'

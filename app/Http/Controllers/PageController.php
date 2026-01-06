@@ -4,54 +4,67 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Kost; 
-use Carbon\Carbon; // <--- WAJIB ADA: Untuk mengecek tanggal iklan
+use Carbon\Carbon; 
 
 class PageController extends Controller
 {
     public function home()
     {
-        $now = \Carbon\Carbon::now(); // Ambil waktu sekarang
+        $now = Carbon::now();
 
+        // -----------------------------------------------------------
         // 1. AMBIL IKLAN KOST (MANUAL & BERBAYAR)
-        // Syarat: Status diterima, is_promoted aktif, dan tanggal masih berlaku
-        $iklanKost = Kost::active() // ScopeActive (status = diterima)
+        // -----------------------------------------------------------
+        $iklanKost = Kost::active() 
             ->where('is_promoted', true)
             ->whereNotNull('promoted_start_date')
             ->whereNotNull('promoted_end_date')
             ->where('promoted_start_date', '<=', $now)
             ->where('promoted_end_date', '>=', $now)
-            ->with(['reviews', 'pemilik']) // Load relasi
-            ->withAvg('reviews', 'rating') // Hitung rata-rata rating
-            ->inRandomOrder() // Acak urutan iklan agar adil
-            ->take(3) // Batasi maksimal 3 iklan tampil
+            ->with(['reviews', 'pemilik']) // HAPUS 'kostImages' agar tidak error
+            ->withAvg('reviews', 'rating')
+            ->inRandomOrder()
+            ->take(3)
             ->get();
 
-        // Ambil ID dari kost yang sudah jadi iklan agar tidak muncul lagi di bawah
+        // Ambil ID iklan agar tidak muncul double di bawah
         $iklanIds = $iklanKost->pluck('id')->toArray();
 
-        // 2. AMBIL REKOMENDASI KOST (OTOMATIS & ORGANIK)
-        // Syarat: Status diterima, BUKAN iklan yang sedang tampil di atas
+        // -----------------------------------------------------------
+        // 2. AMBIL REKOMENDASI (SORTING RATING)
+        // -----------------------------------------------------------
         $rekomendasiKost = Kost::active()
-            ->whereNotIn('id', $iklanIds) // Exclude/Kecualikan kost iklan
-            ->with(['reviews', 'pemilik'])
-            ->withAvg('reviews', 'rating')
-            ->withCount('reviews')
-            // Filter Kualitas (Rating tinggi & ada ulasan)
-            ->having('reviews_avg_rating', '>=', 4.0) 
-            ->having('reviews_count', '>=', 2)
-            ->latest() // Urutkan dari yang terbaru
-            ->take(8)  // Batasi 8 rekomendasi
+            ->whereNotIn('id', $iklanIds)
+            ->with(['reviews', 'pemilik']) // HAPUS 'kostImages'
+            ->withAvg('reviews', 'rating') // Hitung Rating
+            ->withCount('reviews')         // Hitung Jumlah Ulasan
+            
+            // LOGIKA PINTAR: Urutkan rating tertinggi, lalu ulasan terbanyak
+            ->orderByDesc('reviews_avg_rating') 
+            ->orderByDesc('reviews_count')      
+            ->take(8)
             ->get();
 
-        // Filter tambahan: Pastikan data lengkap (menggunakan Accessor is_recommendable di Model)
-        $rekomendasiKost = $rekomendasiKost->filter(function ($kost) {
-            return $kost->is_recommendable; 
-        });
+        // -----------------------------------------------------------
+        // 3. FALLBACK (JARING PENGAMAN)
+        // -----------------------------------------------------------
+        // Jika belum ada kost yang direview sama sekali, ambil kost TERBARU
+        if ($rekomendasiKost->isEmpty()) {
+            $rekomendasiKost = Kost::active()
+                ->whereNotIn('id', $iklanIds)
+                ->with(['reviews', 'pemilik']) // HAPUS 'kostImages'
+                ->withAvg('reviews', 'rating')
+                ->latest() // Urutkan dari yang terbaru
+                ->take(8)
+                ->get();
+        }
 
         // Kirim data ke View
-        // PENTING: Nama variabel harus sama dengan yang di home.blade.php ($iklanKost & $rekomendasiKost)
-        return view('pages.home', compact('iklanKost', 'rekomendasiKost'));
-    
+        return view('pages.home', [
+            'iklanKost'       => $iklanKost,
+            'rekomendasiKost' => $rekomendasiKost, 
+            'recommendations' => $rekomendasiKost // Variabel cadangan
+        ]);
     }
     
     // --- Method Lain Tetap Sama ---

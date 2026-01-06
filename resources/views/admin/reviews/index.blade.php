@@ -8,30 +8,38 @@
     <div class="flex flex-col md:flex-row justify-between items-end gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                📊 Laporan Ekosistem
+                {{-- ICON: Chart Bar (Ganti 📊) --}}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7 text-indigo-600">
+                    <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 018.25-8.25.75.75 0 01.75.75v6.75H18a.75.75 0 01.75.75 8.25 8.25 0 01-16.5 0zm1.5 0v.002c0 .019 0 .037.001.056l.002.068v.048a6.75 6.75 0 006.75 6.75h6.75a6.75 6.75 0 006.75-6.75v-.05l.001-.064c.001-.02.001-.039.001-.059v-.002A6.75 6.75 0 0012.75 6.75h-6.75a6.75 6.75 0 00-6.75 6.75zM12.75 3a.75.75 0 01.75-.75 8.25 8.25 0 018.25 8.25.75.75 0 01-.75.75h-7.5a.75.75 0 01-.75-.75V3z" clip-rule="evenodd" />
+                </svg>
+                Laporan Ekosistem
             </h1>
             <p class="text-sm text-gray-500 mt-1">Pantau pertumbuhan pengguna dan kualitas kost secara real-time.</p>
         </div>
         
         <div class="flex gap-2 relative z-50">
-        <div class="bg-white border border-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm">
-            <span class="text-lg">📅</span>
-            <span class="text-sm text-gray-600 font-bold">{{ date('F Y') }}</span>
+            <div class="bg-white border border-gray-100 rounded-xl px-4 py-2.5 flex items-center gap-2 shadow-sm">
+                {{-- ICON: Calendar (Ganti 📅) --}}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-gray-500">
+                    <path fill-rule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z" clip-rule="evenodd" />
+                </svg>
+                <span class="text-sm text-gray-600 font-bold">{{ date('F Y') }}</span>
+            </div>
+
+            {{-- TOMBOL EXPORT PDF --}}
+            <a href="{{ route('admin.reviews.export') }}" 
+            target="_blank" 
+            class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-indigo-200 transform hover:-translate-y-0.5 cursor-pointer relative z-50">
+                {{-- ICON: Document Arrow Down --}}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M4.5 2A1.5 1.5 0 003 3.5v13A1.5 1.5 0 004.5 18h11a1.5 1.5 0 001.5-1.5V7.621a1.5 1.5 0 00-.44-1.06l-4.12-4.122A1.5 1.5 0 0011.378 2H4.5zm4.75 6.75a.75.75 0 011.5 0v4.44l2.22-2.22a.75.75 0 111.06 1.06l-3.5 3.5a.75.75 0 01-1.06 0l-3.5-3.5a.75.75 0 111.06-1.06l2.22 2.22V8.75z" clip-rule="evenodd" />
+                </svg>
+                Export Ulasan PDF
+            </a>
         </div>
-
-        {{-- TOMBOL EXPORT PDF YANG SUDAH DIPERBAIKI --}}
-        <a href="{{ route('admin.reviews.export') }}" 
-        target="_blank" 
-        class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold transition shadow-lg shadow-indigo-200 transform hover:-translate-y-0.5 cursor-pointer relative z-50">
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Export Ulasan PDF
-        </a>
-    </div>
     </div>
 
-    {{-- 1. SUMMARY CARDS (TETAP) --}}
+    {{-- 1. SUMMARY CARDS --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {{-- Card: Total Pencari --}}
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm relative overflow-hidden group hover:shadow-md transition">
@@ -40,10 +48,20 @@
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider">Pencari Kost</p>
                     <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_user'] }}</h3>
                     <div class="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-                        <span>📈 + Pengguna Baru</span>
+                        {{-- ICON: Trending Up --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                            <path fill-rule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clip-rule="evenodd" />
+                        </svg>
+                        <span>+ Pengguna Baru</span>
                     </div>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">👥</div>
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    {{-- ICON: Users (Ganti 👥) --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M8.25 6.75a3.75 3.75 0 117.5 0 3.75 3.75 0 01-7.5 0zM15.75 9.75a3 3 0 116 0 3 3 0 01-6 0zM2.25 9.75a3 3 0 116 0 3 3 0 01-6 0zM6.31 15.117A6.745 6.745 0 0112 12a6.745 6.745 0 016.709 7.498.75.75 0 01-.372.568A12.696 12.696 0 0112 21.75c-2.305 0-4.47-.612-6.337-1.684a.75.75 0 01-.372-.568 6.787 6.787 0 011.019-4.38z" clip-rule="evenodd" />
+                        <path d="M5.082 14.254a6.741 6.741 0 00-4.562 3.243.75.75 0 00.372.568A12.696 12.696 0 006 19.5c.34 0 .675-.013 1.007-.037a8.256 8.256 0 01-.925-5.21zM18.918 14.254a6.741 6.741 0 014.562 3.243.75.75 0 01-.372.568A12.696 12.696 0 0118 19.5c-.34 0-.675-.013-1.007-.037a8.256 8.256 0 00.925-5.21z" />
+                    </svg>
+                </div>
             </div>
         </div>
 
@@ -55,7 +73,12 @@
                     <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['total_kost'] }}</h3>
                     <p class="text-[10px] text-gray-400 mt-2 font-medium">Dari {{ $stats['total_owner'] }} Mitra Pemilik</p>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl">🏠</div>
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    {{-- ICON: Home (Ganti 🏠) --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                    </svg>
+                </div>
             </div>
         </div>
 
@@ -67,7 +90,12 @@
                     <h3 class="text-3xl font-bold text-gray-900 mt-2">{{ $stats['pending_kost'] }}</h3>
                     <p class="text-[10px] text-gray-400 mt-2 font-medium">Klik untuk verifikasi</p>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl animate-pulse">⏳</div>
+                <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl animate-pulse group-hover:scale-110 transition-transform">
+                    {{-- ICON: Clock/Hourglass (Ganti ⏳) --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zM12.75 6a.75.75 0 00-1.5 0v6c0 .414.336.75.75.75h4.5a.75.75 0 000-1.5h-3.75V6z" clip-rule="evenodd" />
+                    </svg>
+                </div>
             </div>
         </a>
 
@@ -82,19 +110,28 @@
                     </div>
                     <p class="text-[10px] text-gray-400 mt-2 font-medium">Dari {{ $stats['total_review'] }} Ulasan</p>
                 </div>
-                <div class="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-500 flex items-center justify-center text-2xl">⭐</div>
+                <div class="w-12 h-12 rounded-2xl bg-yellow-50 text-yellow-500 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                    {{-- ICON: Star (Ganti ⭐) --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                        <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
+                    </svg>
+                </div>
             </div>
         </div>
     </div>
 
-    {{-- 2. CHARTS SECTION (DIOPTIMALKAN) --}}
+    {{-- 2. CHARTS SECTION --}}
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {{-- Chart: Pertumbuhan (Line) --}}
         <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
             <div class="flex items-center justify-between mb-2">
                 <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                    📈 Tren Pertumbuhan
+                    {{-- ICON: Trending Up (Ganti 📈) --}}
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-indigo-600">
+                        <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 018.25-8.25.75.75 0 01.75.75v6.75H18a.75.75 0 01.75.75 8.25 8.25 0 01-16.5 0zm1.5 0v.002c0 .019 0 .037.001.056l.002.068v.048a6.75 6.75 0 006.75 6.75h6.75a6.75 6.75 0 006.75-6.75v-.05l.001-.064c.001-.02.001-.039.001-.059v-.002A6.75 6.75 0 0012.75 6.75h-6.75a6.75 6.75 0 00-6.75 6.75zM12.75 3a.75.75 0 01.75-.75 8.25 8.25 0 018.25 8.25.75.75 0 01-.75.75h-7.5a.75.75 0 01-.75-.75V3z" clip-rule="evenodd" />
+                    </svg>
+                    Tren Pertumbuhan
                 </h3>
                 <span class="text-xs font-medium text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">6 Bulan Terakhir</span>
             </div>
@@ -106,7 +143,11 @@
         {{-- Chart: Distribusi (Doughnut) --}}
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col">
             <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                📊 Status Kost
+                {{-- ICON: Pie/Donut (Ganti 📊) --}}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-emerald-600">
+                    <path fill-rule="evenodd" d="M2.25 13.5a8.25 8.25 0 018.25-8.25.75.75 0 01.75.75v6.75H18a.75.75 0 01.75.75 8.25 8.25 0 01-16.5 0zm1.5 0v.002c0 .019 0 .037.001.056l.002.068v.048a6.75 6.75 0 006.75 6.75h6.75a6.75 6.75 0 006.75-6.75v-.05l.001-.064c.001-.02.001-.039.001-.059v-.002A6.75 6.75 0 0012.75 6.75h-6.75a6.75 6.75 0 00-6.75 6.75zM12.75 3a.75.75 0 01.75-.75 8.25 8.25 0 018.25 8.25.75.75 0 01-.75.75h-7.5a.75.75 0 01-.75-.75V3z" clip-rule="evenodd" />
+                </svg>
+                Status Kost
             </h3>
             <div class="flex-1 flex flex-col items-center justify-center relative min-h-[250px]">
                 <div class="w-56 h-56 relative">
@@ -136,10 +177,18 @@
         </div>
     </div>
 
-    {{-- 3. TABEL TOP PERFORMING (TETAP) --}}
+    {{-- 3. TABEL TOP PERFORMING --}}
     <div class="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
         <div class="px-6 py-5 border-b border-gray-50 flex justify-between items-center bg-gray-50/30">
-            <h3 class="font-bold text-gray-800 flex items-center gap-2">🏆 Top 5 Kost Paling Diminati</h3>
+            <h3 class="font-bold text-gray-800 flex items-center gap-2">
+                {{-- ICON: Trophy/Star (Ganti 🏆) --}}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5 text-amber-500">
+                    <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.77.549 6.75 6.75 0 002.555-.492 6.75 6.75 0 006.75 0 6.75 6.75 0 002.554.492 6.75 6.75 0 002.769-.549 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.767 47.767 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.348zm13.668 8.04l-1.313-1.313 2.953-2.953a.75.75 0 00-1.06-1.06l-2.953 2.953-1.313-1.313a.75.75 0 10-1.06 1.06l1.844 1.843a.75.75 0 001.06 0l1.844-1.843a.75.75 0 00-1.061-1.06l-1.844 1.843-1.313-1.313z" clip-rule="evenodd" />
+                    <path d="M10.5 19.5a1.5 1.5 0 003 0v-1.5a1.5 1.5 0 00-3 0v1.5z" />
+                    <path fill-rule="evenodd" d="M7.125 6.75a.75.75 0 00-1.5 0v10.5c0 1.657 1.343 3 3 3h6.75c1.657 0 3-1.343 3-3V6.75a.75.75 0 00-1.5 0v10.5a1.5 1.5 0 01-1.5 1.5h-6.75a1.5 1.5 0 01-1.5-1.5V6.75z" clip-rule="evenodd" />
+                </svg>
+                Top 5 Kost Paling Diminati
+            </h3>
             <a href="{{ route('admin.kost.index') }}" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-lg transition">Lihat Semua</a>
         </div>
         <div class="overflow-x-auto">
@@ -161,14 +210,27 @@
                                 <div class="w-10 h-10 bg-gray-100 rounded-xl overflow-hidden border border-gray-200">
                                     @php $foto = is_array($item->foto) ? ($item->foto[0]['path'] ?? $item->foto[0]) : $item->foto; @endphp
                                     @if($foto) <img src="{{ asset('storage/'.$foto) }}" class="w-full h-full object-cover">
-                                    @else <div class="w-full h-full flex items-center justify-center text-lg">🏠</div> @endif
+                                    @else 
+                                        {{-- ICON: Home (Placeholder) --}}
+                                        <div class="w-full h-full flex items-center justify-center text-gray-400">
+                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                                <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="font-bold text-gray-900 text-sm">{{ $item->nama }}</div>
                             </div>
                         </td>
                         <td class="px-6 py-4 text-sm text-gray-600">{{ $item->pemilik->name ?? 'Unknown' }}</td>
                         <td class="px-6 py-4 text-center">
-                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-700 text-xs font-bold border border-yellow-100">⭐ {{ number_format($item->reviews_avg_rating, 1) }}</span>
+                            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-yellow-50 text-yellow-700 text-xs font-bold border border-yellow-100">
+                                {{-- ICON: Star --}}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                                    <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" />
+                                </svg>
+                                {{ number_format($item->reviews_avg_rating, 1) }}
+                            </span>
                         </td>
                         <td class="px-6 py-4 text-center text-sm font-bold text-gray-800">{{ $item->reviews_count }}</td>
                         <td class="px-6 py-4 text-right">
@@ -333,4 +395,4 @@
         }
     });
 </script>
-@endsection  . itu kodingan  review   silhkan sesuikan dnegna kodoe terbaru
+@endsection

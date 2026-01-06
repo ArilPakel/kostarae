@@ -17,6 +17,7 @@
         </div>
         <div>
             <div class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm text-gray-600">
+                {{-- Status Pulse Dot (Tetap dipertahankan karena Tailwind class) --}}
                 <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
                 <span>{{ now()->translatedFormat('l, d F Y') }}</span>
             </div>
@@ -25,8 +26,6 @@
 
     {{-- ===============================================================
        2. KEY METRICS (STATISTIK)
-       Tujuan: Scan cepat kondisi sistem.
-       Grid: 4 Kolom seimbang.
        =============================================================== --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
@@ -46,7 +45,10 @@
             </div>
             <p class="text-xs text-gray-400 mt-4 flex items-center gap-1">
                 Menunggu persetujuan
-                <span class="text-amber-500 group-hover:translate-x-1 transition-transform">→</span>
+                {{-- ICON: Arrow Right (Ganti →) --}}
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 text-amber-500 group-hover:translate-x-1 transition-transform">
+                    <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
+                </svg>
             </p>
         </a>
 
@@ -104,8 +106,6 @@
 
     {{-- ===============================================================
        3. FEATURE HIGHLIGHT: REKOMENDASI SISTEM
-       Tujuan: Menampilkan "Pilihan Editor/Sistem" dengan visual menonjol.
-       Grid: 12 Kolom (Full Width).
        =============================================================== --}}
     <div class="bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200 p-1">
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -113,7 +113,13 @@
             <div class="px-8 py-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        <span class="text-xl">🏆</span> Rekomendasi Sistem
+                        {{-- ICON: Trophy (Ganti 🏆) --}}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-amber-500">
+                            <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.77.549 6.75 6.75 0 002.555-.492 6.75 6.75 0 006.75 0 6.75 6.75 0 002.554.492 6.75 6.75 0 002.769-.549 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.767 47.767 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.348zm13.668 8.04l-1.313-1.313 2.953-2.953a.75.75 0 00-1.06-1.06l-2.953 2.953-1.313-1.313a.75.75 0 10-1.06 1.06l1.844 1.843a.75.75 0 001.06 0l1.844-1.843a.75.75 0 00-1.061-1.06l-1.844 1.843-1.313-1.313z" clip-rule="evenodd" />
+                            <path d="M10.5 19.5a1.5 1.5 0 003 0v-1.5a1.5 1.5 0 00-3 0v1.5z" />
+                            <path fill-rule="evenodd" d="M7.125 6.75a.75.75 0 00-1.5 0v10.5c0 1.657 1.343 3 3 3h6.75c1.657 0 3-1.343 3-3V6.75a.75.75 0 00-1.5 0v10.5a1.5 1.5 0 01-1.5 1.5h-6.75a1.5 1.5 0 01-1.5-1.5V6.75z" clip-rule="evenodd" />
+                        </svg>
+                        Rekomendasi Sistem
                     </h3>
                     <p class="text-sm text-gray-500 mt-1 max-w-2xl">
                         Kost "Elite" yang lolos seleksi ketat (Rating > 4.0, Data Lengkap, Reputasi Baik). 
@@ -146,7 +152,11 @@
                                         @if(!empty($kost->foto) && is_array($kost->foto))
                                             <img src="{{ asset('storage/'.$kost->foto[0]) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                         @else
-                                            <div class="flex items-center justify-center h-full text-[10px] text-gray-400">No Img</div>
+                                            <div class="flex items-center justify-center h-full text-[10px] text-gray-400">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
+                                                    <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd" />
+                                                </svg>
+                                            </div>
                                         @endif
                                     </div>
                                     <div>
@@ -159,8 +169,12 @@
                             {{-- Skor --}}
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <div class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold border border-yellow-200">
-                                        ⭐ {{ number_format($kost->reviews_avg_rating, 1) }}
+                                    <div class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold border border-yellow-200 flex items-center gap-1">
+                                        {{-- ICON: Star Solid (Ganti ⭐) --}}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                                            <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" />
+                                        </svg>
+                                        {{ number_format($kost->reviews_avg_rating, 1) }}
                                     </div>
                                     <span class="text-xs text-gray-500">{{ $kost->reviews_count }} Ulasan</span>
                                 </div>
@@ -202,8 +216,6 @@
 
     {{-- ===============================================================
        4. SPLIT SECTION: AKTIVITAS & PESAN
-       Tujuan: Memisahkan log teknis dan komunikasi user.
-       Grid: 12 Kolom (8 untuk Aktivitas, 4 untuk Pesan).
        =============================================================== --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -221,7 +233,7 @@
                 <div class="space-y-6 relative before:absolute before:inset-y-0 before:left-[17px] before:w-0.5 before:bg-gray-100">
                     @forelse($activities as $activity)
                     <div class="relative pl-8 group">
-                        {{-- Dot Indikator (Warna sesuai tipe aksi) --}}
+                        {{-- Dot Indikator --}}
                         <div class="absolute left-3 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm z-10 
                             {{ $activity->description == 'created' ? 'bg-emerald-500' : ($activity->description == 'deleted' ? 'bg-red-500' : 'bg-blue-500') }}">
                         </div>
@@ -229,7 +241,10 @@
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
                             <div class="text-sm text-gray-600">
                                 <span class="font-bold text-gray-900">{{ $activity->causer->name ?? 'System' }}</span>
-                                <span class="mx-1 text-gray-400">•</span>
+                                <span class="mx-1 text-gray-400">
+                                    {{-- Separator Dot SVG --}}
+                                    <svg viewBox="0 0 2 2" width="3" height="3" aria-hidden="true" class="fill-current inline-block align-middle"><circle cx="1" cy="1" r="1" /></svg>
+                                </span>
                                 <span>{{ $activity->description }}</span>
                                 <span class="font-medium bg-gray-50 px-1.5 rounded text-gray-700">
                                     {{ class_basename($activity->subject_type) }}

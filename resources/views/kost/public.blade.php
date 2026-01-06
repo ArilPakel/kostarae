@@ -1,189 +1,112 @@
-<section class="py-14 bg-linear-to-b from-white to-gray-100">
-    <div class="max-w-7xl mx-auto px-4">
+@once
+    @push('styles')
+    <style>
+        /* Utility: Sembunyikan scrollbar tapi tetap bisa di-scroll */
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+    @endpush
+@endonce
 
-        {{-- ========================================== --}}
-        {{-- BAGIAN 1: IKLAN KOST (PROMOSI)             --}}
-        {{-- ========================================== --}}
-        @if(isset($iklanKost) && $iklanKost->count() > 0)
-            <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2D4A53] mb-10">
-                Promo Spesial 🔥
-            </h2>
+{{-- =============================================================== --}}
+{{-- BAGIAN 1: PROMO SPESIAL (TETAP ADA & PRIORITAS UTAMA) --}}
+{{-- =============================================================== --}}
+@if(isset($iklanKost) && $iklanKost->count() > 0)
+<section class="py-12 md:py-16 bg-white border-b border-[#e5e7eb]">
+    <div class="container mx-auto px-4">
+        
+        {{-- Header Section Promo --}}
+        <div class="flex items-center justify-center md:justify-start gap-3 mb-8 border-b border-[#e5e7eb] pb-4">
+            <h2 class="text-xl md:text-2xl font-bold text-[#1e293b]">Promo Spesial</h2>
+            {{-- Ikon Api/Promo --}}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff7a00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+        </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7 mb-16">
-                @foreach ($iklanKost as $item)
-                    @php
-                        // FOTO UTAMA (anti error)
-                        $fotoArray = is_array($item->foto) ? $item->foto : json_decode($item->foto, true);
-                        $fotoUtama = $fotoArray[0] ?? 'kost/default.jpg';
-                        $imageSrc = asset($fotoUtama);
+        @php
+            $countPromo = $iklanKost->count();
+            // LOGIKA TAMPILAN PROMO:
+            // < 4 item  : Flex Center (Rapi di tengah, tidak rata kiri kosong)
+            // >= 4 item : Slider Horizontal (Agar muat banyak tanpa scroll halaman ke bawah)
+            $layoutClass = ($countPromo < 4) 
+                ? 'flex-wrap justify-center' 
+                : 'flex-nowrap overflow-x-auto justify-start snap-x snap-mandatory pb-6 scrollbar-hide';
+        @endphp
 
-                        // Fasilitas
-                        $fasilitas = is_array($item->fasilitas) ? $item->fasilitas : json_decode($item->fasilitas, true);
-                    @endphp
+        <div class="flex gap-6 {{ $layoutClass }} -mx-4 px-4 md:mx-0 md:px-0">
+            @foreach ($iklanKost as $item)
+                {{-- Memanggil Card dengan Badge PROMO --}}
+                <div class="flex-none w-[85vw] md:w-[280px]">
+                    @include('partials.single-card', ['item' => $item, 'badge' => 'PROMO'])
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
+@endif
 
-                    <a href="{{ route('kost.detail', $item->id) }}" class="group block bg-white rounded-3xl border-2 border-yellow-400 shadow-sm hover:shadow-md transition-all duration-300 relative">
-                        
-                        {{-- IMAGE --}}
-                        <div class="relative h-52 overflow-hidden rounded-t-[22px]">
-                            <img src="{{ $imageSrc }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
 
-                            {{-- Badge Sponsored --}}
-                            <div class="absolute top-0 right-0">
-                                <span class="bg-yellow-400 text-white text-[11px] px-3 py-1 rounded-bl-xl shadow-sm font-bold">
-                                    Sponsored
-                                </span>
-                            </div>
+{{-- =============================================================== --}}
+{{-- BAGIAN 2: REKOMENDASI KOST TERBAIK --}}
+{{-- =============================================================== --}}
+@php
+    // Fallback variable
+    $finalList = $rekomendasiKost ?? $kosts ?? collect([]);
+    $recCount = $finalList->count();
+@endphp
 
-                            {{-- Badge Tipe --}}
-                            @if ($item->tipe)
-                                <div class="absolute bottom-3 right-3">
-                                    <span class="bg-white/85 text-gray-700 text-[11px] px-3 py-1 rounded-full border shadow-sm backdrop-blur-sm">
-                                        {{ ucfirst($item->tipe) }}
-                                    </span>
-                                </div>
-                            @endif
+<section class="py-12 md:py-16 bg-[#f8fafc]">
+    <div class="container mx-auto px-4">
+        
+        {{-- Header Section Rekomendasi --}}
+        <div class="mb-10 text-center max-w-2xl mx-auto">
+            <h2 class="text-2xl md:text-3xl font-bold text-[#1e293b] mb-2">Rekomendasi Kost Terbaik</h2>
+            <p class="text-gray-500 text-sm md:text-base">Pilihan favorit mahasiswa dengan fasilitas lengkap</p>
+        </div>
+
+        @if($recCount > 0)
+            {{-- LOGIKA TAMPILAN REKOMENDASI: --}}
+            @if($recCount < 4)
+                {{-- SEDIKIT DATA: Flex Center (Agar 1-3 item presisi di tengah) --}}
+                <div class="flex flex-wrap justify-center gap-6 mb-12">
+                     @foreach ($finalList as $item)
+                        <div class="w-full md:w-[280px]">
+                            @include('partials.single-card', ['item' => $item, 'badge' => null])
                         </div>
+                    @endforeach
+                </div>
+            @else
+                {{-- BANYAK DATA: Grid System (Agar rapi 4 kolom) --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    @foreach ($finalList as $item)
+                        @include('partials.single-card', ['item' => $item, 'badge' => null])
+                    @endforeach
+                </div>
+            @endif
 
-                        {{-- BODY --}}
-                        <div class="p-5">
-                            <h3 class="font-semibold text-lg text-gray-900 mb-1 line-clamp-1 group-hover:text-orange-600 transition">
-                                {{ $item->nama }}
-                            </h3>
+            {{-- CTA Button --}}
+            <div class="flex justify-center pb-8">
+                <a href="{{ url('/kost') }}" class="group inline-flex items-center gap-3 bg-[#ff7a00] text-white px-8 py-3.5 rounded-xl hover:bg-[#e06900] transition-all font-bold shadow-md transform hover:-translate-y-0.5">
+                    <span>Lihat Semua Kost</span>
+                    <svg class="group-hover:translate-x-1 transition-transform" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                </a>
+            </div>
 
-                            <p class="text-sm text-gray-500 flex items-center gap-1 mb-3 line-clamp-1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 16 16">
-                                    <path d="M8 0a5.53 5.53 0 00-5.5 5.5C2.5 9.75 8 16 8 16s5.5-6.25 5.5-10.5A5.53 5.53 0 008 0z" />
-                                    <path d="M8 7.5a2 2 0 110-4 2 2 0 010 4z" />
-                                </svg>
-                                {{ $item->alamat }}
-                            </p>
-
-                            <p class="text-orange-600 font-bold text-xl mb-4">
-                                Rp {{ number_format($item->harga, 0, ',', '.') }}
-                                <span class="text-gray-500 text-sm font-medium">/bulan</span>
-                            </p>
-
-                            {{-- Fasilitas --}}
-                            @if (!empty($fasilitas))
-                                <div class="flex flex-wrap gap-2 mb-5">
-                                    @foreach (array_slice($fasilitas, 0, 2) as $f)
-                                        <span class="text-[11px] bg-gray-50 px-3 py-1 rounded-xl border text-gray-600 shadow-sm">
-                                            {{ $f }}
-                                        </span>
-                                    @endforeach
-                                    @if (count($fasilitas) > 2)
-                                        <span class="text-[11px] bg-gray-100 px-3 py-1 rounded-xl border text-gray-600">
-                                            +{{ count($fasilitas) - 2 }} lainnya
-                                        </span>
-                                    @endif
-                                </div>
-                            @endif
-
-                            {{-- Button --}}
-                            <button class="w-full rounded-2xl py-3 text-sm font-semibold text-white bg-linear-to-r from-orange-500 to-orange-400 shadow-[0_4px_12px_rgba(255,140,0,0.25)] hover:shadow-[0_6px_18px_rgba(255,140,0,0.35)] hover:brightness-110 hover:-translate-y-0.5 active:translate-y-px transition-all duration-300 ease-out flex items-center justify-center gap-2 group">
-                                Lihat Detail
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transform group-hover:translate-x-1 transition duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                                </svg>
-                            </button>
-                        </div>
-                    </a>
-                @endforeach
+        @else
+            {{-- EMPTY STATE (Jika data kosong) --}}
+            <div class="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-300">
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-full mb-4">
+                    <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900">Belum ada rekomendasi saat ini</h3>
+                <p class="text-gray-500 text-sm mt-1">Silakan cek kembali nanti atau telusuri semua kost.</p>
+                <a href="{{ url('/kost') }}" class="mt-4 inline-block text-[#ff7a00] font-semibold hover:underline">Telusuri Kost &rarr;</a>
             </div>
         @endif
 
-        {{-- ========================================== --}}
-        {{-- BAGIAN 2: REKOMENDASI (Data Utama)         --}}
-        {{-- ========================================== --}}
-        <h2 class="text-3xl md:text-4xl font-bold text-center text-[#2D4A53] mb-10">
-            Rekomendasi Kost Terbaik
-        </h2>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-7">
-            @foreach ($rekomendasiKost as $item)
-                @php
-                    $fotoArray = is_array($item->foto) ? $item->foto : json_decode($item->foto, true);
-                    $fotoUtama = $fotoArray[0] ?? 'kost/default.jpg';
-                    $imageSrc = asset($fotoUtama);
-
-                    $fasilitas = is_array($item->fasilitas) ? $item->fasilitas : json_decode($item->fasilitas, true);
-                @endphp
-
-                <a href="{{ route('kost.detail', $item->id) }}" class="group block bg-white rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
-                    
-                    {{-- IMAGE --}}
-                    <div class="relative h-52 overflow-hidden rounded-t-3xl">
-                        <img src="{{ $imageSrc }}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
-
-                        {{-- Badge Status --}}
-                        <div class="absolute top-3 left-3">
-                            <span class="bg-orange-500/85 text-white text-[11px] px-3 py-1 rounded-full shadow-sm backdrop-blur-sm">
-                                Tersedia
-                            </span>
-                        </div>
-
-                        {{-- Badge Rating --}}
-                        @if(isset($item->reviews_avg_rating))
-                        <div class="absolute top-3 right-3">
-                            <span class="bg-white/90 text-gray-800 text-[11px] px-2 py-1 rounded-full shadow-sm backdrop-blur-sm font-bold flex items-center gap-1">
-                                ⭐ {{ number_format($item->reviews_avg_rating, 1) }}
-                            </span>
-                        </div>
-                        @endif
-
-                        {{-- Badge Tipe --}}
-                        @if ($item->tipe)
-                            <div class="absolute bottom-3 right-3">
-                                <span class="bg-white/85 text-gray-700 text-[11px] px-3 py-1 rounded-full border shadow-sm backdrop-blur-sm">
-                                    {{ ucfirst($item->tipe) }}
-                                </span>
-                            </div>
-                        @endif
-                    </div>
-
-                    {{-- BODY --}}
-                    <div class="p-5">
-                        <h3 class="font-semibold text-lg text-gray-900 mb-1 line-clamp-1 group-hover:text-orange-600 transition">
-                            {{ $item->nama }}
-                        </h3>
-
-                        <p class="text-sm text-gray-500 flex items-center gap-1 mb-3 line-clamp-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M8 0a5.53 5.53 0 00-5.5 5.5C2.5 9.75 8 16 8 16s5.5-6.25 5.5-10.5A5.53 5.53 0 008 0z" />
-                                <path d="M8 7.5a2 2 0 110-4 2 2 0 010 4z" />
-                            </svg>
-                            {{ $item->alamat }}
-                        </p>
-
-                        <p class="text-orange-600 font-bold text-xl mb-4">
-                            Rp {{ number_format($item->harga, 0, ',', '.') }}
-                            <span class="text-gray-500 text-sm font-medium">/bulan</span>
-                        </p>
-
-                        @if (!empty($fasilitas))
-                            <div class="flex flex-wrap gap-2 mb-5">
-                                @foreach (array_slice($fasilitas, 0, 2) as $f)
-                                    <span class="text-[11px] bg-gray-50 px-3 py-1 rounded-xl border text-gray-600 shadow-sm">
-                                        {{ $f }}
-                                    </span>
-                                @endforeach
-                                @if (count($fasilitas) > 2)
-                                    <span class="text-[11px] bg-gray-100 px-3 py-1 rounded-xl border text-gray-600">
-                                        +{{ count($fasilitas) - 2 }} lainnya
-                                    </span>
-                                @endif
-                            </div>
-                        @endif
-
-                        <button class="w-full rounded-2xl py-3 text-sm font-semibold text-white bg-linear-to-r from-orange-500 to-orange-400 shadow-[0_4px_12px_rgba(255,140,0,0.25)] hover:shadow-[0_6px_18px_rgba(255,140,0,0.35)] hover:brightness-110 hover:-translate-y-0.5 active:translate-y-px transition-all duration-300 ease-out flex items-center justify-center gap-2 group">
-                            Lihat Detail
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 transform group-hover:translate-x-1 transition duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-                    </div>
-                </a>
-            @endforeach
-        </div>
     </div>
 </section>
