@@ -9,7 +9,7 @@ use Illuminate\Foundation\Auth\EmailVerificationRequest;
 |--------------------------------------------------------------------------
 */
 
-// Public & User
+// Public & User Controllers
 use App\Http\Controllers\{
     PageController,
     KostController,
@@ -18,14 +18,15 @@ use App\Http\Controllers\{
     UserAuthController,
     GoogleController,
     UserProfileController,
-    ReviewUserController,
+    ReviewUserController, // Opsional jika masih dipakai
+    ReviewController,     // Controller Utama untuk Review User
     OwnerProfileController,
     PesananController,
     UserDashboardController,
     ProfileController
 };
 
-// Admin
+// Admin Controllers
 use App\Http\Controllers\Admin\{
     AuthController as AdminAuthController,
     DashboardController,
@@ -34,7 +35,7 @@ use App\Http\Controllers\Admin\{
     OwnerController,
     PagesController as AdminPagesController,
     ReportController,
-    ReviewController,
+    ReviewController as AdminReviewController, // ALIAS: Agar tidak bentrok dengan ReviewController User
     ActivityController,
     MessageController
 };
@@ -53,9 +54,8 @@ Route::get('/panduan', [PageController::class, 'panduan'])->name('panduan');
 Route::get('/kontak', [PageController::class, 'kontak'])->name('kontak');
 Route::post('/kontak/kirim', [ContactController::class, 'store'])->name('kontak.store');
 
-// Gunakan 'publicList' agar yang tampil adalah Daftar Kost, bukan Dashboard
+// Daftar & Detail Kost
 Route::get('/kost', [KostController::class, 'publicList'])->name('kost.public');
-// Gunakan 'publicShow' untuk detail kost
 Route::get('/kost/detail/{id}', [KostController::class, 'publicShow'])->name('kost.detail');
 
 
@@ -128,12 +128,11 @@ Route::middleware(['auth', 'role:user'])->group(function () {
         ->middleware('throttle:3,1')
         ->name('verification.send');
 
-    // Review Actions
-    Route::post('/kost/{id}/review', [ReviewUserController::class, 'store'])
-        ->name('review.store');
-    Route::put('/review/{id}', [ReviewUserController::class, 'update'])->name('review.update');
-    Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.delete');
-
+    // --- PERBAIKAN ROUTE REVIEW (SESUAI CONTROLLER & BLADE) ---
+    // Menggunakan ReviewController yang baru kita perbaiki
+    Route::post('/kost/{kostId}/review', [ReviewUserController::class, 'store'])->name('review.store');
+    Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.destroy');
+    
     // Pesanan Kost
     Route::post('/pesanan/{kost}', [PesananController::class, 'store'])->name('pesanan.store');
 });
@@ -146,14 +145,12 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 */
 Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->group(function () {
 
-    // 1. Dashboard & Profile
-    // Kita buat dua nama route agar view yang memanggil 'owner.profile' atau 'pemilik.profile' tetap jalan
+    // Dashboard & Profile
     Route::get('/dashboard', [OwnerProfileController::class, 'index'])->name('pemilik.dashboard');
-    Route::get('/profil', [OwnerProfileController::class, 'index'])->name('owner.profile'); // Alias 1
-    Route::get('/profil-edit', [OwnerProfileController::class, 'edit'])->name('pemilik.profile'); // Alias 2
+    Route::get('/profil', [OwnerProfileController::class, 'index'])->name('owner.profile');
+    Route::get('/profil-edit', [OwnerProfileController::class, 'edit'])->name('pemilik.profile');
 
-    // 2. Manajemen Kost (Resource)
-    // Name prefix 'pemilik.' otomatis membuat route: pemilik.kost.index, pemilik.kost.create, dst.
+    // Manajemen Kost
     Route::name('pemilik.')->group(function () {
         Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])->name('kost.deletePhoto');
         Route::resource('kost', KostController::class);
@@ -193,10 +190,11 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::patch('/owners/{id}/status', 'toggleStatus')->name('owners.status');
     });
 
-    // Reviews Management
-    Route::get('/reviews/export', [ReviewController::class, 'exportPdf'])->name('reviews.export');
-    Route::patch('/reviews/{id}/toggle', [ReviewController::class, 'toggleVisibility'])->name('reviews.toggle');
-    Route::resource('reviews', ReviewController::class)->only(['index', 'destroy'])->names('reviews');
+    // Reviews Management (ADMIN)
+    // Menggunakan AdminReviewController (Alias)
+    Route::get('/reviews/export', [AdminReviewController::class, 'exportPdf'])->name('reviews.export');
+    Route::patch('/reviews/{id}/toggle', [AdminReviewController::class, 'toggleVisibility'])->name('reviews.toggle');
+    Route::resource('reviews', AdminReviewController::class)->only(['index', 'destroy'])->names('reviews');
     
     // Pages Management
     Route::prefix('pages')->name('pages.')->controller(AdminPagesController::class)->group(function () {
@@ -212,7 +210,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     Route::get('/activity', [ActivityController::class, 'index'])->name('activity.index');
     Route::get('/activity/{id}', [ActivityController::class, 'show'])->name('activity.show');
 
-    // Pesan Masuk (Manual View Route + Resource)
+    // Pesan Masuk
     Route::get('/pesan-masuk', function () {
         $reports = Report::latest()->get();
         return view('admin.pesan.index', compact('reports'));

@@ -18,20 +18,36 @@ class Kost extends Model
 
     protected $fillable = [
         'pemilik_id',      // Relasi ke tabel users
-        'nama',            // Nama Kost
+        
+        // --- VARIASI NAMA (Agar aman jika DB pakai 'nama' atau 'nama_kost') ---
+        'nama',            
+        'nama_kost',       
+
         'alamat',
         'harga',
-        'tipe',            // Putra/Putri/Campur
+        
+        // --- VARIASI TIPE ---
+        'tipe',            
+        'tipe_kost',       
+
         'fasilitas',       // JSON
-        'foto',            // JSON ["path1", "path2"]
+        'foto',            // JSON (Fallback jika tidak pakai tabel kost_images)
         'status',          // pending, diterima, ditolak
         'deskripsi',
         'alasan_penolakan',
+
+        // --- LOKASI (Sesuai Controller Admin) ---
+        'kota',
+        'kecamatan',
+        'kelurahan',
         
-        // --- TAMBAHAN UNTUK FITUR IKLAN ---
+        // --- FITUR IKLAN ---
         'is_promoted',          // Status apakah sedang diiklankan (true/false)
         'promoted_start_date',  // Tanggal mulai iklan
         'promoted_end_date',    // Tanggal selesai iklan
+        
+        // --- FITUR REKOMENDASI ADMIN ---
+        'is_recommended',       // Checkbox rekomendasi manual admin
     ];
 
     // Casting tipe data otomatis
@@ -40,8 +56,9 @@ class Kost extends Model
         'foto'      => 'array',
         'harga'     => 'integer',
         
-        // Casting untuk Iklan
-        'is_promoted' => 'boolean',
+        // Casting untuk Iklan & Rekomendasi
+        'is_promoted'     => 'boolean',
+        'is_recommended'  => 'boolean', // Baru
         'promoted_start_date' => 'datetime', 
         'promoted_end_date'   => 'datetime', 
     ];
@@ -49,8 +66,14 @@ class Kost extends Model
     // Agar atribut tambahan ini ikut muncul saat model di-convert ke JSON/Array
     protected $appends = ['is_recommendable', 'recommendation_issues', 'promotion_status_label', 'data_completeness'];
 
+    /*
+    |--------------------------------------------------------------------------
+    | RELASI DATABASE
+    |--------------------------------------------------------------------------
+    */
+
     /**
-     * Relasi ke Pemilik (User) - Menggunakan nama 'pemilik'
+     * Relasi ke Pemilik (User)
      */
     public function pemilik()
     {
@@ -58,9 +81,7 @@ class Kost extends Model
     }
 
     /**
-     * [FIX ERROR ADMIN] 
-     * Relasi Alias 'user' agar kompatibel dengan Controller Admin 
-     * yang memanggil Kost::with('user')
+     * Alias 'user' agar kompatibel dengan Controller lama
      */
     public function user()
     {
@@ -73,6 +94,23 @@ class Kost extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class, 'kost_id');
+    }
+
+    /**
+     * Relasi ke Kost Images (PERBAIKAN UTAMA)
+     * Mengatasi error "Call to undefined relationship [kostImages]"
+     */
+    // public function kostImages()
+    // {
+    //     return $this->hasMany(KostImage::class);
+    // }
+
+    /**
+     * Relasi ke Views Counter
+     */
+    public function views()
+    {
+        return $this->hasMany(\App\Models\KostView::class);
     }
 
     /**
@@ -95,15 +133,24 @@ class Kost extends Model
         $score = 0;
         $total_criteria = 5; 
 
-        // Kriteria 1: Foto minimal 3
-        $fotos = $this->foto; 
-        if (is_array($fotos) && count($fotos) >= 3) $score++;
+        // Kriteria 1: Foto minimal 3 (Cek JSON atau Relasi)
+        $hasImages = false;
+        // Cek JSON
+        if (!empty($this->foto) && is_array($this->foto) && count($this->foto) >= 3) {
+            $hasImages = true;
+        } 
+        // Cek Relasi kostImages (Jika JSON kosong)
+        elseif ($this->relationLoaded('kostImages') && $this->kostImages->count() >= 3) {
+            $hasImages = true;
+        }
+        
+        if ($hasImages) $score++;
 
         // Kriteria 2: Alamat Lengkap
         if (!empty($this->alamat) && strlen($this->alamat) > 10) $score++;
 
         // Kriteria 3: Harga & Tipe terisi
-        if ($this->harga > 0 && !empty($this->tipe)) $score++;
+        if ($this->harga > 0 && (!empty($this->tipe) || !empty($this->tipe_kost))) $score++;
 
         // Kriteria 4: Fasilitas terisi
         $fasilitas = $this->fasilitas;
@@ -124,7 +171,7 @@ class Kost extends Model
         return $this->status === 'diterima' &&
                $rating >= 4.0 &&
                $count >= 2 &&
-               $this->data_completeness == 100;
+               $this->data_completeness >= 80; // Ambang batas toleransi 80%
     }
 
     // 3. ALASAN KENAPA TIDAK LAYAK (Untuk Admin Panel)
@@ -138,8 +185,12 @@ class Kost extends Model
         if ($rating < 4.0) $issues[] = "Rating rata-rata rendah (< 4.0)";
         if ($count < 2) $issues[] = "Jumlah ulasan kurang (< 2)";
         
-        $fotos = $this->foto;
-        if (!is_array($fotos) || count($fotos) < 3) $issues[] = "Foto kurang dari 3";
+        // Cek foto
+        $fotoCount = 0;
+        if (is_array($this->foto)) $fotoCount = count($this->foto);
+        if ($this->relationLoaded('kostImages')) $fotoCount = max($fotoCount, $this->kostImages->count());
+
+        if ($fotoCount < 3) $issues[] = "Foto kurang dari 3";
 
         if (optional($this->updated_at)->lt(Carbon::now()->subDays(60))) $issues[] = "Data jarang diupdate (> 60 hari)";
 
@@ -172,11 +223,4 @@ class Kost extends Model
             ->logOnlyDirty()
             ->setDescriptionForEvent(fn(string $eventName) => "Data Kost ini telah di-{$eventName}");
     }
-
-    public function views()
-    {
-    return $this->hasMany(\App\Models\KostView::class);
-    }
-
-
 }

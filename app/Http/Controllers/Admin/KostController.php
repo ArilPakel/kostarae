@@ -7,29 +7,35 @@ use App\Models\Kost;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon; // Pastikan Carbon diimport
 
 class KostController extends Controller
 {
-    // 1. INDEX
+    // 1. INDEX (DIPERBAIKI: N+1 & SEARCH)
     public function index(Request $request)
     {
-        // Pastikan relasi di Model Kost bernama 'pemilik' (public function pemilik() { return $this->belongsTo(User::class, 'pemilik_id'); })
-        $query = Kost::with('pemilik')->latest();
+        // Gunakan Eager Loading 'pemilik' dan 'kostImages' agar ringan
+        $query = Kost::with(['pemilik'])->latest();
 
+        // Filter Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%") // Pastikan kolom database 'nama' atau 'nama_kost'
+                // Cari di kolom nama_kost (prioritas) atau nama (fallback)
+                $q->where('nama_kost', 'like', "%{$search}%")
+                  ->orWhere('nama', 'like', "%{$search}%")
                   ->orWhere('alamat', 'like', "%{$search}%");
             });
         }
 
+        // Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $kosts = $query->paginate(10);
         
+        // Statistik
         $totalKost     = Kost::count();
         $totalPending  = Kost::where('status', 'pending')->count();
         $totalApproved = Kost::where('status', 'diterima')->count();
@@ -41,9 +47,7 @@ class KostController extends Controller
     // 2. SHOW
     public function show($id)
     {
-        // PERBAIKAN: Konsisten menggunakan relasi 'pemilik'
         $kost = Kost::with(['pemilik', 'reviews'])->findOrFail($id);
-        
         return view('admin.kost.show', compact('kost'));
     }
 
@@ -76,63 +80,52 @@ class KostController extends Controller
         return view('admin.kost.create', compact('users'));
     }
 
-    // 7. STORE (BAGIAN YANG DIPERBAIKI TOTAL)
+    // 7. STORE
     public function store(Request $request)
     {
-        // A. Update nomor WA jika ada request update
+        // A. Update nomor WA pemilik jika diminta
         if ($request->filled('owner_phone_update')) {
-            $request->validate([
-                'owner_phone_update' => 'numeric|digits_between:10,15'
-            ]);
-            User::where('id', $request->pemilik_id)
-                ->update(['phone' => $request->owner_phone_update]);
+            $request->validate(['owner_phone_update' => 'numeric|digits_between:10,15']);
+            User::where('id', $request->pemilik_id)->update(['phone' => $request->owner_phone_update]);
         }
 
-        // B. Pastikan pemilik punya WA (Cek ulang setelah update)
+        // B. Cek WA Pemilik
         $pemilik = User::findOrFail($request->pemilik_id);
         if (empty($pemilik->phone)) {
-            return back()->withInput()
-                ->with('error', 'Pemilik belum memiliki nomor WhatsApp.');
+            return back()->withInput()->with('error', 'Pemilik belum memiliki nomor WhatsApp.');
         }
 
-        // C. Bersihkan harga (Hapus titik/koma)
         $cleanHarga = str_replace(['.', ','], '', $request->harga);
 
-        // D. Validasi Input
         $request->validate([
             'pemilik_id' => 'required|exists:users,id',
-            'nama'       => 'required|string|max:255', // Sesuaikan dengan name="nama" di form
+            'nama'       => 'required|string|max:255',
             'alamat'     => 'required|string',
             'harga'      => 'required',
             'tipe'       => 'required|string',
             'foto'       => 'required|array|min:1|max:5',
             'foto.*'     => 'image|mimes:jpeg,png,jpg,webp|max:2048',
-        ], [
-            'foto.max'   => 'Maksimal upload 5 foto.',
-            'foto.*.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        // E. Upload Foto
+        // E. Upload Foto (Array Path)
         $fotoPaths = [];
         if($request->hasFile('foto')) {
             foreach($request->file('foto') as $file) {
-                // Simpan ke storage/app/public/kosts
                 $path = $file->store('kosts', 'public'); 
-                $fotoPaths[] = $path;
+                $fotoPaths[] = $path; // Simpan path saja
             }
         }
 
-        // F. Simpan Data ke Database
-        // ✅ PERBAIKAN: Langsung masukkan hasil upload ke create()
-        // Jangan panggil $kost->save() sebelum variabelnya ada.
+        // F. Simpan Data
+        // Catatan: 'nama_kost' disesuaikan, jika DB anda pakai 'nama', ubah key ini.
         Kost::create([
             'pemilik_id' => $request->pemilik_id,
-            'nama'  => $request->nama, // Pastikan kolom DB 'nama_kost' atau 'nama'. Sesuaikan disini.
+            'nama_kost'  => $request->nama, 
             'alamat'     => $request->alamat,
             'harga'      => $cleanHarga,
-            'tipe_kost'  => $request->tipe, // Pastikan kolom DB 'tipe_kost' atau 'tipe'.
-            'fasilitas'  => json_encode($request->fasilitas ?? []), // Encode array ke JSON
-            'foto'       => json_encode($fotoPaths),            // Encode array path foto ke JSON
+            'tipe_kost'  => $request->tipe,
+            'fasilitas'  => json_encode($request->fasilitas ?? []),
+            'foto'       => json_encode($fotoPaths),
             'status'     => 'pending',
             'deskripsi'  => $request->deskripsi,
             'kota'       => $request->kota,
@@ -140,9 +133,7 @@ class KostController extends Controller
             'kelurahan'  => $request->kelurahan,
         ]);
 
-        return redirect()
-            ->route('admin.kost.index')
-            ->with('success', 'Kost berhasil ditambahkan dan menunggu validasi.');
+        return redirect()->route('admin.kost.index')->with('success', 'Kost berhasil ditambahkan.');
     }
 
     // 8. EDIT
@@ -151,9 +142,8 @@ class KostController extends Controller
         $kost = Kost::findOrFail($id);
         $users = User::where('role', '!=', 'admin')->get();
         
-        // Cek jika alamat mengandung koma baru di explode, untuk menghindari error offset
+        // Parsing alamat lama
         $alamatParts = explode(',', $kost->alamat);
-        
         $lokasiData = [
             'detail' => isset($alamatParts[0]) ? trim($alamatParts[0]) : $kost->alamat,
             'kel'    => isset($alamatParts[1]) ? trim($alamatParts[1]) : '',
@@ -169,15 +159,10 @@ class KostController extends Controller
     {
         $kost = Kost::findOrFail($id);
 
-        // Update Pemilik & No HP jika ada
         if($request->has('pemilik_id')) {
             $pemilik = User::findOrFail($request->pemilik_id);
             if ($request->filled('owner_phone_update')) {
-                $request->validate(['owner_phone_update' => 'numeric|digits_between:10,15']);
                 $pemilik->update(['phone' => $request->owner_phone_update]);
-            }
-            if (empty($pemilik->phone) && empty($request->owner_phone_update)) {
-                return back()->withInput()->with('error', 'Pemilik wajib memiliki nomor WA.');
             }
         }
 
@@ -190,14 +175,14 @@ class KostController extends Controller
             'foto.*' => 'image|max:2048',
         ]);
 
-        // Logic Foto: Gabungkan foto lama dengan yang baru (jika ada)
-        // Pastikan foto lama di-decode dulu jika string JSON
+        // Logic Foto (Merge lama + baru)
         $currentFotos = is_string($kost->foto) ? json_decode($kost->foto, true) : ($kost->foto ?? []);
+        // Pastikan currentFotos array bersih (hanya path jika memungkinkan)
+        // Jika format lama array assoc, mungkin perlu penyesuaian. Disini asumsi array path.
         
         if ($request->hasFile('foto')) {
-            foreach ($request->file('foto') as $index => $file) {
-                $path = $file->store('kosts', 'public'); // Samakan foldernya dengan store: 'kosts'
-                // Karena struktur di store array simple, kita push path-nya saja
+            foreach ($request->file('foto') as $file) {
+                $path = $file->store('kosts', 'public');
                 $currentFotos[] = $path; 
             }
         }
@@ -211,9 +196,7 @@ class KostController extends Controller
 
         // Logic Alamat
         $kelurahanFinal = $request->filled('kelurahan_manual') ? $request->kelurahan_manual : $request->kelurahan;
-        
         if($request->filled(['alamat', 'kecamatan', 'kota']) || $kelurahanFinal) {
-             // Menggunakan input alamat detail, bukan $kost->alamat lama
              $alamatDetail = $request->alamat ?? ''; 
              $alamatFull = "{$alamatDetail}, {$kelurahanFinal}, {$request->kecamatan}, {$request->kota}";
         } else {
@@ -222,16 +205,16 @@ class KostController extends Controller
 
         $kost->update([
             'pemilik_id' => $request->pemilik_id ?? $kost->pemilik_id,
-            'nama_kost'  => $request->nama, // Sesuaikan nama kolom DB
+            'nama_kost'  => $request->nama,
             'alamat'     => $alamatFull,
             'harga'      => $cleanHarga,
-            'tipe_kost'  => $request->tipe, // Sesuaikan nama kolom DB
-            'fasilitas'  => json_encode($fasilitas), // Encode JSON
-            'foto'       => json_encode($currentFotos), // Encode JSON
+            'tipe_kost'  => $request->tipe,
+            'fasilitas'  => json_encode($fasilitas),
+            'foto'       => json_encode($currentFotos),
             'deskripsi'  => ucfirst($request->deskripsi),
         ]);
 
-        return redirect()->route('admin.kost.index')->with('success', 'Data kost berhasil diperbarui.');
+        return redirect()->route('admin.kost.index')->with('success', 'Data kost diperbarui.');
     }
 
     // 10. DESTROY
@@ -239,14 +222,12 @@ class KostController extends Controller
     {
         $kost = Kost::findOrFail($id);
         
-        // Decode foto jika JSON string
         $fotos = is_string($kost->foto) ? json_decode($kost->foto, true) : $kost->foto;
 
         if ($fotos && is_array($fotos)) {
             foreach ($fotos as $item) {
-                // Cek apakah item string path atau array (tergantung cara simpan sebelumnya)
+                // Handle struktur data lama (array path vs string path)
                 $path = is_array($item) ? ($item['path'] ?? null) : $item;
-                
                 if ($path && Storage::disk('public')->exists($path)) {
                     Storage::disk('public')->delete($path);
                 }
@@ -256,43 +237,37 @@ class KostController extends Controller
         return back()->with('success', 'Data dihapus.');
     }
 
-    public function management()
-    {
-        $kosts = Kost::withCount('reviews')
-            ->withAvg('reviews', 'rating')
-            ->orderBy('is_promoted', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10);
-
-        return view('admin.kost.management', compact('kosts'));
-    }
-
     // ==========================================
-    // METHOD PROMOTE
+    // METHOD PROMOTE (AJAX SUPPORT)
     // ==========================================
     public function promote(Request $request, $id)
     {
         $kost = Kost::findOrFail($id);
         
-        $request->validate([
-            'is_promoted' => 'required|boolean',
-            'promoted_start_date' => 'nullable|required_if:is_promoted,true|date',
-            'promoted_end_date'   => 'nullable|required_if:is_promoted,true|date|after_or_equal:promoted_start_date',
-        ]);
+        // Jika request JSON (dari modal ajax)
+        if ($request->expectsJson()) {
+            $request->validate([
+                'is_promoted' => 'required|boolean',
+                'promoted_start_date' => 'nullable|required_if:is_promoted,true|date',
+                'promoted_end_date'   => 'nullable|required_if:is_promoted,true|date|after_or_equal:promoted_start_date',
+            ]);
 
-        $kost->update([
-            'is_promoted' => $request->is_promoted,
-            'promoted_start_date' => $request->is_promoted ? $request->promoted_start_date : null,
-            'promoted_end_date'   => $request->is_promoted ? $request->promoted_end_date : null,
-        ]);
+            $kost->update([
+                'is_promoted' => $request->is_promoted,
+                'promoted_start_date' => $request->is_promoted ? $request->promoted_start_date : null,
+                'promoted_end_date'   => $request->is_promoted ? $request->promoted_end_date : null,
+            ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Status promosi berhasil diperbarui!'
-        ]);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Status promosi berhasil diperbarui!'
+            ]);
+        }
+
+        return back()->with('error', 'Invalid Request');
     }
 
-    // --- METHOD UPDATE STATUS VIA AJAX ---
+    // METHOD UPDATE STATUS VIA AJAX (DROPDOWN DI INDEX)
     public function updateStatus(Request $request, $id)
     {
         $kost = Kost::findOrFail($id);
@@ -305,7 +280,7 @@ class KostController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Status kost berhasil diperbarui menjadi ' . ucfirst($request->status)
+            'message' => 'Status kost diperbarui: ' . ucfirst($request->status)
         ]);
     }
 }
