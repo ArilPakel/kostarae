@@ -143,18 +143,21 @@ Route::middleware(['auth', 'role:user'])->group(function () {
 | 5. PEMILIK KOST AREA (OWNER)
 |--------------------------------------------------------------------------
 */
-Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->group(function () {
+Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->name('pemilik.')->group(function () {
 
-    // Dashboard & Profile
-    Route::get('/dashboard', [OwnerProfileController::class, 'index'])->name('pemilik.dashboard');
-    Route::get('/profil', [OwnerProfileController::class, 'index'])->name('owner.profile');
-    Route::get('/profil-edit', [OwnerProfileController::class, 'edit'])->name('pemilik.profile');
+    // --- ROUTE PROFIL PEMILIK ---
+    Route::get('/profil', [OwnerProfileController::class, 'index'])->name('profile'); 
+    Route::get('/profil/edit', [OwnerProfileController::class, 'edit'])->name('profile.edit'); 
+    Route::put('/profil/update', [OwnerProfileController::class, 'update'])->name('profile.update');
+
+    // --- ROUTE KEAMANAN/PASSWORD PEMILIK (DISESUAIKAN) ---
+    // Menggunakan prefix /profil/keamanan agar lebih rapi dan konsisten
+    Route::get('/profil/keamanan', [OwnerProfileController::class, 'editPassword'])->name('password.edit');
+    Route::put('/profil/keamanan', [OwnerProfileController::class, 'updatePassword'])->name('password.update');
 
     // Manajemen Kost
-    Route::name('pemilik.')->group(function () {
-        Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])->name('kost.deletePhoto');
-        Route::resource('kost', KostController::class);
-    });
+    Route::post('/kost/{id}/delete-photo', [KostController::class, 'deletePhoto'])->name('kost.deletePhoto');
+    Route::resource('kost', KostController::class);
 });
 
 

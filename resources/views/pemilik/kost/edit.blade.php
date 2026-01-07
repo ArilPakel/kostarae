@@ -60,23 +60,30 @@
         <div class="mb-6">
             <label class="block text-sm font-semibold mb-2">Foto Saat Ini</label>
 
-            <div class="grid grid-cols-3 gap-3">
-                @foreach($kost->foto ?? [] as $foto)
+            div class="grid grid-cols-3 gap-3">
+            @php
+                // 1. Normalisasi Data: Pastikan data menjadi Array
+                $photos = is_string($kost->foto) ? json_decode($kost->foto, true) : $kost->foto;
+            @endphp
+
+            @if(is_array($photos))
+               @foreach($kost->foto ?? [] as $foto)
+                @php
+                    // Ambil path string baik jika $foto adalah array maupun string langsung
+                    $path = is_array($foto) ? ($foto['path'] ?? null) : $foto;
+                @endphp
+
+                @if($path)
                     <div class="relative group">
-
-                        <img src="{{ asset($foto) }}"
-                             class="w-full h-32 object-cover rounded-lg shadow">
-
-                        <button type="button"
-                            class="absolute top-2 right-2 bg-red-600 text-white text-xs px-2 py-1 rounded opacity-80 group-hover:opacity-100 deletePhotoBtn"
-                            data-id="{{ $kost->id }}"
-                            data-foto="{{ $foto }}">
-                            Hapus
-                        </button>
-
+                        <img src="{{ asset('storage/' . $path) }}" 
+                            class="w-full h-32 object-cover rounded-lg shadow">
+                        {{-- Tambahkan tombol hapus jika diperlukan --}}
                     </div>
-                @endforeach
-            </div>
+                @endif
+            @endforeach
+            @else
+                <p class="text-sm text-gray-500 col-span-3">Tidak ada foto lama.</p>
+            @endif
         </div>
 
         {{-- Upload baru --}}

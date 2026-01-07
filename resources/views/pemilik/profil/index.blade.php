@@ -211,7 +211,7 @@
                     {{-- Ganti Password (Sudah diperbaiki) --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Kata Sandi</label>
-                        <a href="{{ route('password.edit') }}" class="flex items-center justify-between w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition group cursor-pointer decoration-0">
+                        <a href="{{ auth()->user()->role === 'pemilik'? route('pemilik.password.edit') : route('password.edit') }}"class="flex items-center justify-between w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition group cursor-pointer decoration-0">
                             <span class="text-sm font-medium text-gray-700 group-hover:text-orange-600 transition">Ubah Kata Sandi</span>
                             <div class="bg-white p-1.5 rounded-lg border border-gray-200 group-hover:border-orange-200">
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
