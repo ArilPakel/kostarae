@@ -1,9 +1,11 @@
-<section class="relative min-h-[60vh] md:min-h-[75vh] flex items-center justify-center text-white text-center pt-20 pb-12 overflow-hidden">
+<section class="relative min-h-[60vh] md:min-h-[75vh] flex items-center justify-center text-white text-center pt-32 pb-16 overflow-hidden">
     
     {{-- 1. BACKGROUND IMAGE --}}
     <div class="absolute inset-0 z-0">
-        <img src="/images/hero.png" alt="Background Kost" class="w-full h-full object-cover object-center">
-        {{-- Gradient Overlay: Agar teks putih terbaca jelas di atas gambar --}}
+        {{-- Pastikan path gambar benar --}}
+        <img src="{{ asset('images/hero.png') }}" alt="Background Kost" class="w-full h-full object-cover object-center">
+        
+        {{-- Gradient Overlay: Agar teks putih terbaca jelas --}}
         <div class="absolute inset-0 bg-gradient-to-b from-black/80 via-[#1f3f46]/70 to-black/80 mix-blend-multiply"></div>
     </div>
 
@@ -23,10 +25,10 @@
         <form action="{{ route('kost.public') }}" method="GET"
             class="bg-white/95 backdrop-blur-sm shadow-2xl rounded-2xl max-w-5xl mx-auto p-5 md:p-6 border border-white/20 text-left">
             
-            {{-- Grid Container: 1 Kolom (Mobile), 2 Kolom (Tablet), 4 Kolom (Desktop) --}}
+            {{-- Grid Container --}}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
 
-                {{-- Input 1: Pencarian Utama (Full Width di Mobile/Tablet, 2 Kolom di Desktop) --}}
+                {{-- Input 1: Pencarian Utama (Full Width) --}}
                 <div class="col-span-1 md:col-span-2 lg:col-span-4">
                     <label class="font-bold text-xs text-gray-500 uppercase tracking-wider mb-2 block ml-1">Cari Lokasi / Nama Kost</label>
                     <div class="relative group">
@@ -93,7 +95,7 @@
                 {{-- Button CTA --}}
                 <div class="col-span-1 md:col-span-2 lg:col-span-4 mt-2">
                     <button type="submit"
-                        class="w-full h-12 bg-[#ff7a00] hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg hover:shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm md:text-base">
+                        class="w-full h-12 bg-[#ff7a00] hover:bg-[#e06900] text-white font-bold rounded-xl shadow-lg hover:shadow-orange-500/30 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm md:text-base">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>

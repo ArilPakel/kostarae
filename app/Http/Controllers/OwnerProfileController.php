@@ -26,4 +26,14 @@ class OwnerProfileController extends Controller
 
         return view('pemilik.profil.index', compact('user', 'kosts', 'stats'));
     }
+
+    public function edit()
+    {
+        // Ambil data user yang sedang login (jika perlu)
+        $user = auth()->user();
+
+        // Arahkan ke view/tampilan form edit profile
+        // Pastikan nama view-nya sesuai dengan struktur folder kamu
+        return view('pemilik.profile', compact('user')); 
+    }
 }
