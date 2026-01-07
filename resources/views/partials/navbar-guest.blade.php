@@ -1,4 +1,4 @@
-<nav id="navbar" x-data="{ open: false }" class="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-14 flex items-center bg-transparent">
+<nav id="navbar" x-data="{ open: false }" class="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-14 flex items-center bg-[#2D4A53] shadow-md">
     
     <div class="w-full px-4 sm:px-6 lg:px-8 flex justify-between items-center h-full">
 

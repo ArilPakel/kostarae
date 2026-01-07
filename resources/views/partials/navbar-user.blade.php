@@ -1,4 +1,4 @@
-<nav id="navbar" x-data="{ mobileOpen: false, userDropdownOpen: false }" class="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-14 flex items-center bg-transparent">
+<nav id="navbar" x-data="{ mobileOpen: false, userDropdownOpen: false }" class="fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 h-14 flex items-center bg-[#2D4A53] shadow-md">
     
     <div class="w-full px-4 sm:px-6 lg:px-8 h-full flex items-center justify-between">
         
@@ -121,7 +121,7 @@
                     </div>
                 </div>
             @else
-                {{-- TOMBOL LOGIN (GUEST) - Jaga-jaga jika ter-include --}}
+                {{-- TOMBOL LOGIN (GUEST) --}}
                 <a href="{{ route('login') }}" class="px-5 py-2 text-sm font-bold text-white border border-white rounded-full hover:bg-[#E07B3C] hover:border-[#E07B3C] transition transform hover:-translate-y-0.5">
                     Masuk
                 </a>

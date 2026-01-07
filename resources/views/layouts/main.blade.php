@@ -78,27 +78,6 @@
     {{-- 4. MODAL TAMBAHAN --}}
     @include('partials.register-modal')
 
-    {{-- 5. SCRIPT SCROLL NAVBAR (BARU DITAMBAHKAN) --}}
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const navbar = document.getElementById('navbar');
-
-            // Cek apakah element navbar ada (untuk menghindari error di halaman tanpa navbar)
-            if (navbar) {
-                window.addEventListener('scroll', () => {
-                    if (window.scrollY > 10) {
-                        // Saat Scroll: Warna Hijau Kostarae + Shadow
-                        navbar.classList.add('bg-[#2D4A53]', 'shadow-md');
-                        navbar.classList.remove('bg-transparent');
-                    } else {
-                        // Saat di Pucuk Atas: Transparan
-                        navbar.classList.add('bg-transparent');
-                        navbar.classList.remove('bg-[#2D4A53]', 'shadow-md');
-                    }
-                });
-            }
-        });
-    </script>
 
 </body>
 </html>
