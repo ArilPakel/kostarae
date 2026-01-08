@@ -25,17 +25,13 @@
 <div class="relative w-full h-[50vh] min-h-[400px] lg:h-[500px]">
     <img src="{{ $heroImage }}" alt="Hero Background" class="absolute inset-0 w-full h-full object-cover filter blur-[3px] scale-105 brightness-75">
     
-    {{-- Overlay Gradient --}}
     <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-gray-50/90"></div>
 
-    {{-- Konten Hero --}}
     <div class="absolute inset-0 flex flex-col justify-center pb-20">
         <div class="container mx-auto px-4">
             
-            {{-- [UX CHANGE] TOMBOL KEMBALI (Pengganti Breadcrumb) --}}
             <div class="mb-6">
                 <a href="{{ route('kost.public') }}" class="inline-flex items-center gap-2 text-white/90 hover:text-[#ff7a00] transition-colors group font-medium text-sm backdrop-blur-sm bg-white/10 px-4 py-2 rounded-full border border-white/20 hover:bg-white/20">
-                    {{-- Ikon Panah Kiri --}}
                     <svg class="w-4 h-4 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
@@ -43,7 +39,6 @@
                 </a>
             </div>
 
-            {{-- Judul Besar & Badge --}}
             <div class="animate-fade-in-up">
                 @if(!empty($kost->tipe))
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4 text-white border border-white/20 backdrop-blur-md shadow-lg
@@ -104,63 +99,30 @@
             </div>
         </div>
 
-        {{-- [UX ADDITION] NOTIFIKASI SUKSES (Flash Message) --}}
-        {{-- [UX NOTIFICATION] AREA NOTIFIKASI --}}
-        
-        {{-- 1. Notifikasi Sukses (Hijau) --}}
+        {{-- ALERT NOTIFIKASI --}}
         @if(session('success'))
             <div id="alert-success" class="mb-8 bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-r-xl shadow-sm flex items-start gap-3 transition-all duration-500 ease-in-out transform translate-y-0 opacity-100">
-                {{-- Icon Ceklis --}}
                 <div class="bg-emerald-100 p-1.5 rounded-full text-emerald-600 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
                 <div class="flex-1">
                     <h3 class="font-bold text-emerald-800 text-sm">Berhasil!</h3>
                     <p class="text-sm text-emerald-700 leading-relaxed">{{ session('success') }}</p>
                 </div>
-                {{-- Tombol Close --}}
-                <button onclick="document.getElementById('alert-success').style.display='none'" class="text-emerald-400 hover:text-emerald-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <button onclick="document.getElementById('alert-success').style.display='none'" class="text-emerald-400 hover:text-emerald-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
         @endif
 
-        {{-- 2. Notifikasi Error (Merah) --}}
         @if(session('error'))
             <div id="alert-error" class="mb-8 bg-rose-50 border-l-4 border-rose-500 p-4 rounded-r-xl shadow-sm flex items-start gap-3 transition-all duration-500 ease-in-out transform translate-y-0 opacity-100">
-                {{-- Icon Tanda Seru --}}
                 <div class="bg-rose-100 p-1.5 rounded-full text-rose-600 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                    </svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                 </div>
                 <div class="flex-1">
                     <h3 class="font-bold text-rose-800 text-sm">Gagal!</h3>
                     <p class="text-sm text-rose-700 leading-relaxed">{{ session('error') }}</p>
                 </div>
-                {{-- Tombol Close --}}
-                <button onclick="document.getElementById('alert-error').style.display='none'" class="text-rose-400 hover:text-rose-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-        @endif
-
-        {{-- 3. Validasi Error Form (Jika user lupa isi rating/komentar) --}}
-        @if ($errors->any())
-            <div id="alert-validation" class="mb-8 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-r-xl shadow-sm flex items-start gap-3">
-                <div class="bg-orange-100 p-1.5 rounded-full text-orange-600 shrink-0">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-bold text-orange-800 text-sm">Periksa Kembali Inputan</h3>
-                    <ul class="list-disc list-inside text-sm text-orange-700 mt-1">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
+                <button onclick="document.getElementById('alert-error').style.display='none'" class="text-rose-400 hover:text-rose-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
         @endif
 
@@ -187,15 +149,28 @@
                     @endif
                 </div>
 
-                {{-- Fasilitas --}}
+                {{-- Fasilitas (FIXED: JSON Decoding Manual) --}}
                 <div class="bg-white p-6 md:p-8 rounded-3xl border border-gray-100 shadow-sm">
                     <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2 border-b border-gray-100 pb-3">
                         <svg class="w-5 h-5 text-[#ff7a00]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                         Fasilitas Tersedia
                     </h3>
-                    @if(!empty($kost->fasilitas) && count($kost->fasilitas) > 0)
+
+                    {{-- [FIX START] Logic untuk memastikan Fasilitas adalah Array Valid --}}
+                    @php
+                        $fasilitasArray = $kost->fasilitas;
+                        if (is_string($fasilitasArray)) {
+                            $fasilitasArray = json_decode($fasilitasArray, true);
+                        }
+                        if (!is_array($fasilitasArray)) {
+                            $fasilitasArray = [];
+                        }
+                    @endphp
+                    {{-- [FIX END] --}}
+
+                    @if(!empty($fasilitasArray) && count($fasilitasArray) > 0)
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                            @foreach($kost->fasilitas as $fasilitas)
+                            @foreach($fasilitasArray as $fasilitas)
                             <div class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 hover:border-[#ff7a00]/30 transition group hover:shadow-sm">
                                 <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[#ff7a00] shadow-sm border border-gray-100 group-hover:scale-110 transition-transform">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -221,7 +196,7 @@
                         </div>
                     </div>
 
-                    {{-- Form Ulasan (Auth Only) --}}
+                    {{-- Form Ulasan --}}
                     @auth
                         @if(auth()->user()->role === 'user')
                         <div class="mb-8 bg-gray-50 p-5 rounded-2xl border border-gray-200">
@@ -253,7 +228,7 @@
                         @endif
                     @endauth
 
-                    {{-- List Ulasan (Dengan Fitur Hapus) --}}
+                    {{-- List Ulasan --}}
                     <div class="space-y-6 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
                         @forelse($kost->reviews->where('is_hidden', false) as $review)
                             <div class="flex gap-4 border-b border-gray-100 pb-6 last:border-0 relative group">
@@ -271,7 +246,6 @@
                                             </span>
                                         </div>
 
-                                        {{-- [UX ADDITION] TOMBOL HAPUS (Hanya Pemilik Ulasan) --}}
                                         @if(auth()->id() === $review->user_id)
                                             <form action="{{ route('review.destroy', $review->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ulasan ini?');">
                                                 @csrf
@@ -306,7 +280,6 @@
                     
                     {{-- CARD PEMILIK & HARGA --}}
                     <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-xl shadow-gray-200/50 relative overflow-hidden">
-                        {{-- Aksen Dekoratif --}}
                         <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#ff7a00] to-orange-300"></div>
 
                         <div class="mb-5 border-b border-gray-100 pb-5">
@@ -339,7 +312,6 @@
                             @auth
                                 @if(auth()->id() === $kost->pemilik_id)
                                     <a href="{{ route('pemilik.kost.edit', $kost->id) }}" class="flex items-center justify-center gap-2 w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl transition border border-gray-200">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                         Edit Kost Saya
                                     </a>
                                 @else
@@ -348,8 +320,6 @@
                                         if(substr($phone, 0, 1) == '0') $phone = '62'.substr($phone, 1);
                                         $waLink = "https://wa.me/{$phone}?text=Halo, saya melihat kost {$kost->nama} di Kostarae dan ingin bertanya ketersediaan kamar.";
                                     @endphp
-                                    
-                                    {{-- CTA UTAMA --}}
                                     <a href="{{ $waLink }}" target="_blank" class="flex items-center justify-center gap-2 w-full py-4 bg-[#ff7a00] hover:bg-orange-600 text-white font-bold rounded-xl shadow-lg shadow-orange-500/30 transform hover:-translate-y-0.5 transition-all group">
                                         <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.463 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
                                         Hubungi Pemilik
@@ -363,7 +333,7 @@
                         </div>
                     </div>
 
-                    {{-- 2. DISCLAIMER PLATFORM REKOMENDASI --}}
+                    {{-- DISCLAIMER --}}
                     <div class="bg-blue-50 p-5 rounded-2xl border border-blue-100 text-blue-800 shadow-sm">
                         <div class="flex items-start gap-3">
                             <svg class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -376,7 +346,7 @@
                         </div>
                     </div>
 
-                    {{-- 3. SAFETY TIPS --}}
+                    {{-- SAFETY TIPS --}}
                     <div class="p-5 rounded-2xl border border-gray-100 bg-white shadow-sm">
                         <p class="font-bold text-gray-800 text-sm mb-3 flex items-center gap-2">
                             <svg class="w-4 h-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -396,7 +366,7 @@
     </div>
 </div>
 
-{{-- MODAL IMAGE ZOOM (Full Screen) --}}
+{{-- MODAL IMAGE ZOOM --}}
 <div id="imgModal" class="fixed inset-0 bg-black/95 hidden items-center justify-center z-[100] p-4 backdrop-blur-sm transition-opacity opacity-0 pointer-events-none">
     <div class="relative w-full max-w-6xl h-full flex flex-col items-center justify-center">
         <button onclick="closeImage()" class="absolute top-4 right-4 z-50 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition focus:outline-none">
@@ -416,7 +386,7 @@
         preview.src = src;
         modal.classList.remove('hidden', 'opacity-0', 'pointer-events-none');
         modal.classList.add('flex', 'opacity-100', 'pointer-events-auto');
-        document.body.style.overflow = 'hidden'; // Stop scrolling background
+        document.body.style.overflow = 'hidden'; 
     }
 
     function closeImage() {
@@ -425,15 +395,14 @@
         setTimeout(() => {
             modal.classList.add('hidden');
             modal.classList.remove('flex');
-        }, 300); // Wait for transition
-        document.body.style.overflow = 'auto'; // Resume scrolling
+        }, 300); 
+        document.body.style.overflow = 'auto'; 
     }
 
     modal?.addEventListener('click', (e) => {
         if(e.target === modal || e.target.closest('.relative') === modal) closeImage();
     });
 
-    // Rating Logic
     const ratingBtns = document.querySelectorAll('.rating-btn');
     const ratingInput = document.getElementById('ratingInput');
 
@@ -455,12 +424,11 @@
         });
     }
 
-    // Auto-hide alerts after 5 seconds
     setTimeout(function() {
         const alerts = document.querySelectorAll('[id^="alert-"]');
         alerts.forEach(alert => {
             alert.style.opacity = '0';
-            setTimeout(() => alert.style.display = 'none', 500); // Wait for fade out
+            setTimeout(() => alert.style.display = 'none', 500); 
         });
     }, 5000);
 </script>

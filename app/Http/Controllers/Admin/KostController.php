@@ -12,15 +12,12 @@ use Carbon\Carbon;
 class KostController extends Controller
 {
     // ==========================================
-    // 0. RESET SEMUA REKOMENDASI (TOMBOL DI DASHBOARD)
+    // 0. RESET SEMUA REKOMENDASI
     // ==========================================
     public function resetRecommendation()
     {
-        // Set SEMUA kost menjadi tidak direkomendasikan
-        // Ini otomatis mengaktifkan logic "Fallback Rating Tertinggi" di PageController & Dashboard
         \App\Models\Kost::query()->update(['is_recommended' => false]);
-
-        return back()->with('success', 'Mode Rekomendasi berhasil direset ke OTOMATIS (Berdasarkan Rating).');
+        return back()->with('success', 'Mode Rekomendasi berhasil direset ke OTOMATIS.');
     }
 
     // 1. INDEX
@@ -28,24 +25,21 @@ class KostController extends Controller
     {
         $query = Kost::with(['pemilik'])->latest();
 
-        // Filter Pencarian
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('nama_kost', 'like', "%{$search}%")
-                  ->orWhere('nama', 'like', "%{$search}%") // Fallback kolom lama
+                // [FIX] Hapus nama_kost agar tidak error pencarian
+                $q->where('nama', 'like', "%{$search}%") 
                   ->orWhere('alamat', 'like', "%{$search}%");
             });
         }
 
-        // Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
 
         $kosts = $query->paginate(10);
         
-        // Statistik
         $totalKost     = Kost::count();
         $totalPending  = Kost::where('status', 'pending')->count();
         $totalApproved = Kost::whereIn('status', ['diterima', 'active', 'aktif'])->count(); 
@@ -68,20 +62,17 @@ class KostController extends Controller
             'status' => 'diterima', 
             'alasan_penolakan' => null
         ]);
-        
-        return back()->with('success', 'Kost berhasil diterima dan ditayangkan.');
+        return back()->with('success', 'Kost berhasil diterima.');
     }
 
     // 4. REJECT
     public function reject(Request $request, $id)
     {
         $request->validate(['alasan' => 'required|string|min:5']);
-        
         Kost::findOrFail($id)->update([
             'status' => 'ditolak', 
             'alasan_penolakan' => $request->alasan
         ]);
-        
         return back()->with('success', 'Kost ditolak.');
     }
 
@@ -102,7 +93,9 @@ class KostController extends Controller
         return view('admin.kost.create', compact('users'));
     }
 
-    // 7. STORE
+    // ==========================================
+    // 7. STORE (BAGIAN YANG DIPERBAIKI)
+    // ==========================================
     public function store(Request $request)
     {
         $request->validate([
@@ -116,7 +109,7 @@ class KostController extends Controller
 
         $pemilik = User::findOrFail($request->pemilik_id);
         if (empty($pemilik->phone)) {
-            return back()->withInput()->with('error', 'Pemilik ini belum memiliki nomor WhatsApp. Harap isi nomor WA terlebih dahulu.');
+            return back()->withInput()->with('error', 'Pemilik belum memiliki nomor WhatsApp.');
         }
 
         $cleanHarga = $request->harga ? str_replace(['.', ','], '', $request->harga) : 0;
@@ -138,21 +131,27 @@ class KostController extends Controller
             }
         }
 
+        // [FIX] Gabungkan alamat lengkap agar data kota/kecamatan tersimpan di kolom 'alamat'
+        // Karena kolom 'kota', 'kecamatan', 'kelurahan' TIDAK ADA di database.
+        $alamatLengkap = "{$request->alamat}, {$request->kelurahan}, {$request->kecamatan}, {$request->kota}";
+
         Kost::create([
             'pemilik_id' => $request->pemilik_id,
-            'nama_kost'  => $request->nama, 
+            // 'nama_kost' => $request->nama, // DIHAPUS (Error Column not found)
             'nama'       => $request->nama,
-            'alamat'     => $request->alamat,
+            'alamat'     => $alamatLengkap, // Menggunakan alamat lengkap gabungan
             'harga'      => $cleanHarga,
-            'tipe_kost'  => $request->tipe,
+            // 'tipe_kost' => $request->tipe, // DIHAPUS (Error Column not found)
             'tipe'       => $request->tipe,
             'fasilitas'  => json_encode($request->fasilitas ?? []),
             'foto'       => json_encode($fotoPaths),
             'status'     => 'pending',
             'deskripsi'  => $request->deskripsi,
-            'kota'       => $request->kota,
-            'kecamatan'  => $request->kecamatan,
-            'kelurahan'  => $request->kelurahan,
+            
+            // Kolom di bawah ini DIHAPUS dari query insert karena tidak ada di DB
+            // 'kota'       => $request->kota,
+            // 'kecamatan'  => $request->kecamatan,
+            // 'kelurahan'  => $request->kelurahan,
         ]);
 
         return redirect()->route('admin.kost.index')->with('success', 'Kost berhasil ditambahkan.');
@@ -164,12 +163,17 @@ class KostController extends Controller
         $kost = Kost::findOrFail($id);
         $users = User::whereIn('role', ['pemilik', 'owner'])->get();
         
+        // Memecah alamat kembali untuk form edit (Opsional, logika sederhana)
         $alamatParts = explode(',', $kost->alamat);
+        
+        // Ambil bagian belakang sebagai Kota, Kec, Kel jika formatnya sesuai
+        // Ini hanya estimasi karena data digabung jadi string
+        $totalPart = count($alamatParts);
         $lokasiData = [
-            'detail' => isset($alamatParts[0]) ? trim($alamatParts[0]) : $kost->alamat,
-            'kel'    => isset($alamatParts[1]) ? trim($alamatParts[1]) : ($kost->kelurahan ?? ''),
-            'kec'    => isset($alamatParts[2]) ? trim($alamatParts[2]) : ($kost->kecamatan ?? ''),
-            'kota'   => isset($alamatParts[3]) ? trim($alamatParts[3]) : ($kost->kota ?? ''),
+            'detail' => $alamatParts[0] ?? $kost->alamat,
+            'kel'    => isset($alamatParts[$totalPart-3]) ? trim($alamatParts[$totalPart-3]) : '',
+            'kec'    => isset($alamatParts[$totalPart-2]) ? trim($alamatParts[$totalPart-2]) : '',
+            'kota'   => isset($alamatParts[$totalPart-1]) ? trim($alamatParts[$totalPart-1]) : '',
         ];
 
         return view('admin.kost.edit', compact('kost', 'users', 'lokasiData'));
@@ -211,6 +215,7 @@ class KostController extends Controller
             $fasilitas = array_merge($fasilitas, $tambahan);
         }
 
+        // [FIX] Update logika alamat gabungan
         $kelurahanFinal = $request->filled('kelurahan_manual') ? $request->kelurahan_manual : $request->kelurahan;
         
         if($request->filled(['alamat', 'kecamatan', 'kota'])) {
@@ -222,16 +227,17 @@ class KostController extends Controller
 
         $kost->update([
             'pemilik_id' => $request->pemilik_id ?? $kost->pemilik_id,
-            'nama_kost'  => $request->nama,
-            'alamat'     => $alamatFull,
+            'nama'       => $request->nama, // Pastikan pakai 'nama' bukan 'nama_kost'
+            'alamat'     => $alamatFull,    // Masuk ke kolom 'alamat'
             'harga'      => $cleanHarga,
-            'tipe_kost'  => $request->tipe,
+            'tipe'       => $request->tipe, // Pastikan pakai 'tipe' bukan 'tipe_kost'
             'fasilitas'  => json_encode($fasilitas),
             'foto'       => json_encode($currentFotos),
             'deskripsi'  => ucfirst($request->deskripsi),
-            'kota'       => $request->kota ?? $kost->kota,
-            'kecamatan'  => $request->kecamatan ?? $kost->kecamatan,
-            'kelurahan'  => $kelurahanFinal ?? $kost->kelurahan,
+            
+            // HAPUS update ke kolom yang tidak ada
+            // 'kota'       => ...,
+            // 'kecamatan'  => ...,
         ]);
 
         return redirect()->route('admin.kost.index')->with('success', 'Data kost diperbarui.');
@@ -256,59 +262,38 @@ class KostController extends Controller
         return back()->with('success', 'Data dihapus.');
     }
 
-    // ==========================================
-    // METHOD: REKOMENDASI (BINTANG/MANUAL ADMIN)
-    // ==========================================
     public function promote($id)
     {
         $kost = Kost::findOrFail($id);
-        
-        // Toggle status Rekomendasi (True <-> False)
         $kost->is_recommended = !$kost->is_recommended;
         $kost->save();
-
         $msg = $kost->is_recommended ? 'ditambahkan ke' : 'dihapus dari';
-        return back()->with('success', "Kost berhasil {$msg} rekomendasi halaman depan!");
+        return back()->with('success', "Kost berhasil {$msg} rekomendasi!");
     }
 
-    // ==========================================
-    // METHOD: UPDATE STATUS VIA AJAX
-    // ==========================================
     public function updateStatus(Request $request, $id)
     {
         $kost = Kost::findOrFail($id);
-        
         $request->validate(['status' => 'required|in:pending,diterima,ditolak']);
         $kost->update(['status' => $request->status]);
-
         return response()->json(['success' => true, 'message' => 'Status berhasil diubah']);
     }
 
-    // ==========================================
-    // METHOD: UPDATE ADS (IKLAN BERBAYAR/MEGAPHONE)
-    // ==========================================
-    // Pastikan ini HANYA ADA SATU dalam class ini
     public function updateAds(Request $request, $id)
     {
         $kost = Kost::findOrFail($id);
-        
-        // Validasi Input dari Modal AJAX
         $request->validate([
             'is_promoted' => 'required|boolean',
             'promoted_start_date' => 'nullable|required_if:is_promoted,true|date',
             'promoted_end_date'   => 'nullable|required_if:is_promoted,true|date|after_or_equal:promoted_start_date',
         ]);
 
-        // Update Data
         $kost->update([
             'is_promoted' => $request->is_promoted,
             'promoted_start_date' => $request->is_promoted ? $request->promoted_start_date : null,
             'promoted_end_date'   => $request->is_promoted ? $request->promoted_end_date : null,
         ]);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Status iklan berhasil diperbarui!'
-        ]);
+        return response()->json(['status' => 'success', 'message' => 'Status iklan diperbarui!']);
     }
 }
