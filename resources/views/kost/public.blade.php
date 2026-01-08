@@ -16,12 +16,28 @@
     <div class="container mx-auto px-4">
         
         {{-- Header Section Promo --}}
-        <div class="flex items-center justify-center md:justify-start gap-3 mb-8 border-b border-[#e5e7eb] pb-4">
-            <h2 class="text-xl md:text-2xl font-bold text-[#1e293b]">Promo Spesial</h2>
-            {{-- Ikon Api/Promo --}}
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff7a00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+        {{-- Header Section Promo --}}
+        <div class="flex items-center justify-center gap-3 mb-8 border-b border-[#e5e7eb] pb-4 text-center">
+            
+            <h2 class="text-xl md:text-2xl font-bold text-[#1e293b]">
+                Promo Spesial
+            </h2>
+
+            {{-- Icon Star Modern (Outline) --}}
+            <svg 
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5 md:w-6 md:h-6 flex-shrink-0"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#ff7a00"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="M12 3.5l2.8 5.7 6.3.9-4.6 4.5 1.1 6.3L12 17.9l-5.6 3 1.1-6.3L2.9 10l6.3-.9L12 3.5z"/>
             </svg>
+
         </div>
 
         @php
