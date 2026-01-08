@@ -68,7 +68,7 @@
                 </svg>
                 Data Kost
             </h1>
-            <p class="text-sm text-gray-500 mt-1">Kelola data kost, verifikasi status, dan atur promosi.</p>
+            <p class="text-sm text-gray-500 mt-1">Kelola data kost, rekomendasi, dan iklan.</p>
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3">
@@ -105,23 +105,14 @@
             </a>
             <a href="{{ route('admin.kost.index', ['status' => 'pending']) }}" 
                class="px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 {{ $currentStatus == 'pending' ? 'bg-amber-500 text-white border-amber-500' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-13a.75.75 0 00-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 000-1.5h-3.25V5z" clip-rule="evenodd" />
-                </svg>
                 Menunggu
             </a>
             <a href="{{ route('admin.kost.index', ['status' => 'diterima']) }}" 
                class="px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 {{ $currentStatus == 'diterima' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
-                </svg>
                 Aktif
             </a>
             <a href="{{ route('admin.kost.index', ['status' => 'ditolak']) }}" 
                class="px-4 py-1.5 rounded-full text-xs font-bold border transition flex items-center gap-1.5 {{ $currentStatus == 'ditolak' ? 'bg-rose-500 text-white border-rose-500' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5">
-                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                </svg>
                 Ditolak
             </a>
         </div>
@@ -133,7 +124,7 @@
                         <th class="px-6 py-4">Info Kost</th>
                         <th class="px-6 py-4">Pemilik</th>
                         <th class="px-6 py-4 text-center">Verifikasi</th>
-                        <th class="px-6 py-4 text-center">Status Iklan</th>
+                        <th class="px-6 py-4 text-center">Status / Promosi</th> {{-- HEADER UPDATE --}}
                         <th class="px-6 py-4 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -141,23 +132,16 @@
                     @forelse ($kosts as $kost)
                     <tr class="hover:bg-indigo-50/30 transition group">
                         
-                        {{-- ========================================================= --}}
-                        {{-- ⚠️ PERBAIKAN DI SINI (UI/UX + DATA BINDING AMAN) --}}
-                        {{-- ========================================================= --}}
+                        {{-- 1. INFO KOST (TETAP) --}}
                         <td class="px-6 py-4">
                             <div class="flex items-start gap-4">
-                                {{-- Logic Gambar (Optimized) --}}
+                                {{-- Logic Gambar --}}
                                 <div class="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0 flex items-center justify-center text-gray-400 shadow-sm mt-1">
                                     @php
-                                        // Fallback logic untuk gambar
                                         $imgSrc = asset('kost/default.jpg');
-                                        
-                                        // Cek relasi kostImages dulu (Lebih efisien jika eager load jalan)
                                         if ($kost->relationLoaded('kostImages') && $kost->kostImages->isNotEmpty()) {
                                              $imgSrc = asset('storage/' . $kost->kostImages->first()->path);
-                                        } 
-                                        // Cek kolom JSON foto sebagai fallback
-                                        elseif (!empty($kost->foto)) {
+                                        } elseif (!empty($kost->foto)) {
                                             $foto = $kost->foto;
                                             if (is_string($foto)) {
                                                 $decoded = json_decode($foto, true);
@@ -166,35 +150,22 @@
                                                 $foto = $foto[0] ?? null;
                                             }
                                             if ($foto) {
-                                                // Handle jika foto berupa array path atau string path
                                                 $path = is_array($foto) ? ($foto['path'] ?? null) : $foto;
                                                 if ($path) $imgSrc = asset('storage/'.$path);
                                             }
                                         }
                                     @endphp
-                                    
-                                    {{-- Tambahkan loading="lazy" --}}
                                     <img src="{{ $imgSrc }}" class="w-full h-full object-cover" alt="Foto Kost" loading="lazy" onerror="this.src='{{ asset('kost/default.jpg') }}'">
                                 </div>
                                 
-                                {{-- INFO DETAIL (PERBAIKAN VISIBILITAS NAMA & FALLBACK) --}}
                                 <div class="flex flex-col gap-1 min-w-[200px] max-w-[300px]">
-                                    {{-- Nama Kost with Fallback --}}
                                     <span class="text-base font-bold text-gray-900 leading-tight line-clamp-2 hover:text-indigo-600 transition-colors cursor-help" 
-                                          title="{{ $kost->nama_kost ?? $kost->nama ?? 'Nama Tidak Tersedia' }}">
+                                          title="{{ $kost->nama_kost ?? $kost->nama }}">
                                         {{ $kost->nama_kost ?? $kost->nama ?? 'Nama Tidak Tersedia' }}
                                     </span>
-
-                                    {{-- Alamat --}}
                                     <div class="flex items-start gap-1 text-xs text-gray-500">
-                                        <svg class="w-3 h-3 mt-0.5 shrink-0 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
                                         <span class="line-clamp-1">{{ $kost->alamat ?? '-' }}</span>
                                     </div>
-
-                                    {{-- Harga --}}
                                     <span class="text-xs font-bold text-indigo-600 mt-0.5">
                                         Rp {{ number_format($kost->harga ?? 0, 0, ',', '.') }}
                                     </span>
@@ -202,7 +173,7 @@
                             </div>
                         </td>
 
-                        {{-- PEMILIK --}}
+                        {{-- 2. PEMILIK (TETAP) --}}
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
@@ -210,13 +181,9 @@
                                 </div>
                                 <div>
                                     <div class="font-bold text-gray-800 text-xs">{{ $kost->pemilik->name ?? 'Unknown' }}</div>
-                                    
                                     @if($kost->pemilik && $kost->pemilik->phone)
                                         @php $waPhone = preg_replace('/^0/', '62', $kost->pemilik->phone); @endphp
                                         <a href="https://wa.me/{{ $waPhone }}" target="_blank" class="text-[10px] text-green-600 flex items-center gap-1 hover:underline font-medium bg-green-50 px-2 py-0.5 rounded-full w-fit mt-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
-                                                <path fill-rule="evenodd" d="M2 3.5A1.5 1.5 0 013.5 2h1.148a1.5 1.5 0 011.465 1.175l.716 3.223a1.5 1.5 0 01-1.052 1.767l-.933.267c-.41.117-.643.555-.48.95a11.542 11.542 0 006.254 6.254c.395.163.833-.07.95-.48l.267-.933a1.5 1.5 0 011.767-1.052l3.223.716A1.5 1.5 0 0118 15.352V16.5a1.5 1.5 0 01-1.5 1.5H15c-1.149 0-2.263-.15-3.326-.43A13.022 13.022 0 012.43 8.326 13.019 13.019 0 012 5V3.5z" clip-rule="evenodd" />
-                                            </svg>
                                             Chat WA
                                         </a>
                                     @else
@@ -226,7 +193,7 @@
                             </div>
                         </td>
 
-                        {{-- STATUS VERIFIKASI (DROPDOWN AJAX) --}}
+                        {{-- 3. VERIFIKASI (TETAP) --}}
                         <td class="px-6 py-4 text-center">
                             <div class="relative inline-block">
                                 <select onchange="updateStatusVerifikasi({{ $kost->id }}, this.value)" 
@@ -234,55 +201,72 @@
                                     {{ $kost->status == 'diterima' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : '' }}
                                     {{ $kost->status == 'pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : '' }}
                                     {{ $kost->status == 'ditolak' ? 'bg-rose-50 text-rose-700 ring-rose-200' : '' }}">
-                                    
                                     <option value="diterima" {{ $kost->status == 'diterima' ? 'selected' : '' }}>Aktif</option>
                                     <option value="pending" {{ $kost->status == 'pending' ? 'selected' : '' }}>Pending</option>
                                     <option value="ditolak" {{ $kost->status == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
                                 </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
                             </div>
                         </td>
 
-                        {{-- STATUS IKLAN --}}
+                        {{-- 4. STATUS IKLAN & REKOMENDASI (DIPERBAIKI) --}}
                         <td class="px-6 py-4 text-center">
-                            @php
-                                $isActivePromo = $kost->is_promoted && now()->between($kost->promoted_start_date, $kost->promoted_end_date);
-                            @endphp
-                            
-                            @if($isActivePromo)
-                                <div class="inline-flex flex-col items-center">
+                            <div class="flex flex-col items-center gap-2">
+                                {{-- A. IKLAN BERBAYAR --}}
+                                @php
+                                    $isActivePromo = $kost->is_promoted && now()->between($kost->promoted_start_date, $kost->promoted_end_date);
+                                @endphp
+                                @if($isActivePromo)
                                     <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-700">
                                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
                                             <path fill-rule="evenodd" d="M13.5 4.938a7 7 0 11-9.006 1.737c.202-.257.59-.218.793.039.313.398.648.775 1 1.135 1.25.32 2.5 1.5 3 2.5a.75.75 0 001.214-.523c-.1-1.01.077-2.062.5-3.04.42-1.002.5-2.052.5-3.041a.75.75 0 00-1.214-.523 7.02 7.02 0 00-2.787 1.625z" clip-rule="evenodd" />
                                         </svg>
                                         Iklan Aktif
                                     </span>
-                                    <span class="text-[10px] text-gray-400 mt-1">
-                                        s/d {{ \Carbon\Carbon::parse($kost->promoted_end_date)->format('d M') }}
+                                @endif
+
+                                {{-- B. REKOMENDASI ADMIN (FITUR BARU) --}}
+                                @if($kost->is_recommended)
+                                    <span class="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-1 text-[10px] font-bold text-purple-700 border border-purple-200">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
+                                            <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" />
+                                        </svg>
+                                        Rekomendasi
                                     </span>
-                                </div>
-                            @else
-                                <span class="inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-400 border border-gray-100">
-                                    Off
-                                </span>
-                            @endif
+                                @endif
+
+                                @if(!$isActivePromo && !$kost->is_recommended)
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </div>
                         </td>
 
-                        {{-- AKSI --}}
+                        {{-- 5. AKSI (DIPERBAIKI) --}}
                         <td class="px-6 py-4 text-center">
                             <div class="flex items-center justify-center gap-2">
-                                {{-- Promosi --}}
+                                
+                                {{-- A. Tombol Toggle Rekomendasi (FITUR BARU) --}}
+                                <form action="{{ route('admin.kost.promote', $kost->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" 
+                                        class="w-9 h-9 flex items-center justify-center rounded-full transition shadow-sm border
+                                        {{ $kost->is_recommended ? 'bg-purple-50 text-purple-600 border-purple-100 hover:bg-purple-100' : 'bg-gray-50 text-gray-400 border-gray-100 hover:bg-purple-50 hover:text-purple-600' }}"
+                                        title="{{ $kost->is_recommended ? 'Hapus Rekomendasi' : 'Jadikan Rekomendasi' }}">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="{{ $kost->is_recommended ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" class="w-5 h-5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.563.045.797.77.375 1.141l-4.225 3.733a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.225-3.733c-.422-.371-.188-1.096.375-1.141l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
+                                        </svg>
+                                    </button>
+                                </form>
+
+                                {{-- B. Tombol Iklan Berbayar (Modal JS) --}}
                                 <button onclick="openPromoModal({{ $kost->id }}, {{ $kost->is_promoted ? 1 : 0 }}, '{{ $kost->promoted_start_date }}', '{{ $kost->promoted_end_date }}')" 
-                                    class="w-9 h-9 flex items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 transition shadow-sm border border-amber-100" title="Atur Promosi">
+                                    class="w-9 h-9 flex items-center justify-center rounded-full bg-amber-50 text-amber-600 hover:bg-amber-100 hover:scale-105 transition shadow-sm border border-amber-100" title="Atur Iklan Berbayar">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
                                         <path fill-rule="evenodd" d="M4.125 3C3.089 3 2.25 3.84 2.25 4.875V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V4.875C21.75 3.84 20.91 3 19.875 3H4.125zM12 5.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zm0 3.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zm0 3.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zM5.8 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" clip-rule="evenodd" />
                                         <path d="M11.25 16.5a.75.75 0 00-1.5 0h-4.5a.75.75 0 00-.75.75v.75a.75.75 0 001.5 0v-.75h3.75v.75a.75.75 0 001.5 0v-.75z" />
                                     </svg>
                                 </button>
 
-                                {{-- Detail --}}
+                                {{-- C. Tombol Detail --}}
                                 <a href="{{ route('admin.kost.show', $kost->id) }}" 
                                    class="w-9 h-9 flex items-center justify-center rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 hover:scale-105 transition shadow-sm border border-blue-100" title="Lihat Detail">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
@@ -291,7 +275,7 @@
                                     </svg>
                                 </a>
 
-                                {{-- Hapus --}}
+                                {{-- D. Tombol Hapus --}}
                                 <form action="{{ route('admin.kost.destroy', $kost->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kost ini?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" 
@@ -307,7 +291,6 @@
                     @empty
                     <tr>
                         <td colspan="5" class="px-6 py-12 text-center text-gray-400">
-                            {{-- ICON: Home (Empty State) --}}
                             <div class="flex justify-center mb-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-12 h-12 opacity-30">
                                     <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
@@ -329,28 +312,28 @@
     </div>
 </div>
 
-{{-- MODAL PROMOSI --}}
+{{-- MODAL PROMOSI (TETAP SAMA UNTUK FITUR IKLAN BERBAYAR) --}}
 <div id="promoModal" class="fixed inset-0 z-50 hidden bg-gray-900/60 flex items-center justify-center backdrop-blur-sm transition-opacity">
     <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 transform transition-all scale-100 border border-gray-100">
         
         <div class="flex items-center gap-3 mb-6">
             <div class="w-10 h-10 bg-amber-50 rounded-full flex items-center justify-center text-amber-600">
-                {{-- ICON: Megaphone --}}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
                     <path fill-rule="evenodd" d="M4.125 3C3.089 3 2.25 3.84 2.25 4.875V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V4.875C21.75 3.84 20.91 3 19.875 3H4.125zM12 5.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zm0 3.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zm0 3.75a.75.75 0 01.75-.75h4.5a.75.75 0 010 1.5h-4.5a.75.75 0 01-.75-.75zM5.8 7.5a2.25 2.25 0 100 4.5 2.25 2.25 0 000-4.5z" clip-rule="evenodd" />
                     <path d="M11.25 16.5a.75.75 0 00-1.5 0h-4.5a.75.75 0 00-.75.75v.75a.75.75 0 001.5 0v-.75h3.75v.75a.75.75 0 001.5 0v-.75z" />
                 </svg>
             </div>
-            <h3 class="text-xl font-bold text-gray-900">Promosi Kost</h3>
+            <h3 class="text-xl font-bold text-gray-900">Promosi Kost (Ads)</h3>
         </div>
         
+        {{-- Form ini akan menggunakan route untuk updateAds (Fitur berbayar) --}}
         <form id="promoForm">
             <input type="hidden" id="kostId">
             
             <div class="flex items-center justify-between mb-6 bg-gray-50 p-4 rounded-2xl border border-gray-100">
                 <div>
                     <span class="text-gray-800 font-bold text-sm block">Status Iklan</span>
-                    <span class="text-xs text-gray-500">Tampilkan di halaman utama</span>
+                    <span class="text-xs text-gray-500">Tampilkan di slot premium</span>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" id="promoSwitch" class="sr-only peer">
@@ -381,7 +364,7 @@
     </div>
 </div>
 
-{{-- SCRIPT (TETAP) --}}
+{{-- SCRIPT --}}
 <script>
     async function updateStatusVerifikasi(id, newStatus) {
         document.body.style.cursor = 'wait';
@@ -408,6 +391,7 @@
         }
     }
 
+    // Modal Logic untuk Iklan Berbayar
     function openPromoModal(id, isPromoted, start, end) {
         document.getElementById('kostId').value = id;
         document.getElementById('promoSwitch').checked = isPromoted == 1;
@@ -433,6 +417,7 @@
         }
     }
 
+    // Ajax untuk Simpan Iklan (Ads)
     document.getElementById('promoForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const id = document.getElementById('kostId').value;
@@ -442,7 +427,13 @@
         btn.disabled = true;
 
         try {
-            const response = await fetch(`/admin/kost/promotion/${id}`, {
+            // URL ini mungkin perlu disesuaikan jika Anda menamai route Ads berbeda
+            // Namun berdasarkan controller, Anda mungkin perlu membuat route khusus untuk Ads
+            // Karena method 'promote' di controller sekarang dipakai untuk toggle rekomendasi.
+            // Asumsi: Anda punya route '/admin/kost/ads/{id}' atau semacamnya untuk updateAds.
+            // Sesuai kode sebelumnya, AJAX ini hit 'admin/kost/promotion'. 
+            // Pastikan route ini mengarah ke method yang benar (Ads).
+            const response = await fetch(`/admin/kost/ads/${id}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

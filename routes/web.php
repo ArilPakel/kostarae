@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
+use Illuminate\Http\Request;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,8 +19,8 @@ use App\Http\Controllers\{
     UserAuthController,
     GoogleController,
     UserProfileController,
-    ReviewUserController, // Opsional jika masih dipakai
-    ReviewController,     // Controller Utama untuk Review User
+    ReviewUserController,
+    ReviewController,
     OwnerProfileController,
     PesananController,
     UserDashboardController,
@@ -35,7 +36,7 @@ use App\Http\Controllers\Admin\{
     OwnerController,
     PagesController as AdminPagesController,
     ReportController,
-    ReviewController as AdminReviewController, // ALIAS: Agar tidak bentrok dengan ReviewController User
+    ReviewController as AdminReviewController,
     ActivityController,
     MessageController
 };
@@ -47,7 +48,6 @@ use App\Models\Report;
 | 1. PUBLIC ROUTES (Halaman Depan)
 |--------------------------------------------------------------------------
 */
-// Halaman Statis
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/sdank', [PageController::class, 'sdank'])->name('sdank');
 Route::get('/panduan', [PageController::class, 'panduan'])->name('panduan');
@@ -97,7 +97,30 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
 /*
 |--------------------------------------------------------------------------
-| 4. AUTHENTICATED USER (PENCARI KOST)
+| 4. GLOBAL AUTH ROUTES (VERIFIKASI EMAIL)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth'])->group(function () {
+    
+    // 1. Proses Verifikasi Link Email
+    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
+        $request->fulfill();
+        $route = $request->user()->role === 'pemilik' ? 'pemilik.profile' : 'user.profile';
+        return redirect()->route($route)->with('status', 'Email berhasil diverifikasi!');
+    })->middleware('signed')->name('verification.verify');
+
+    // 2. Kirim Ulang Link Verifikasi
+    Route::post('/email/verification-notification', function (Request $request) {
+        $request->user()->sendEmailVerificationNotification();
+        return back()->with('status', 'Link verifikasi telah dikirim ulang!');
+    })->middleware('throttle:6,1')->name('verification.send');
+    
+});
+
+
+/*
+|--------------------------------------------------------------------------
+| 5. AUTHENTICATED USER (KHUSUS PENCARI KOST)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:user'])->group(function () {
@@ -116,42 +139,30 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/user/security/password', [ProfileController::class, 'editPassword'])->name('password.edit');
     Route::put('/user/security/password', [ProfileController::class, 'updatePassword'])->name('password.update');
 
-    // Email Verification
-    Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
-        $request->fulfill();
-        return redirect()->route(
-            $request->user()->role === 'pemilik' ? 'owner.profile' : 'user.profile'
-        )->with('status', 'Email berhasil diverifikasi!');
-    })->middleware('signed')->name('verification.verify');
-
-    Route::post('/email/verification-notification', [UserProfileController::class, 'resendVerification'])
-        ->middleware('throttle:3,1')
-        ->name('verification.send');
-
-    // --- PERBAIKAN ROUTE REVIEW (SESUAI CONTROLLER & BLADE) ---
-    // Menggunakan ReviewController yang baru kita perbaiki
+    // Review & Pesanan
     Route::post('/kost/{kostId}/review', [ReviewUserController::class, 'store'])->name('review.store');
     Route::delete('/review/{id}', [ReviewUserController::class, 'destroy'])->name('review.destroy');
-    
-    // Pesanan Kost
     Route::post('/pesanan/{kost}', [PesananController::class, 'store'])->name('pesanan.store');
-});
+    // Halaman Utama Ulasan
+    Route::get('/ulasan', [PageController::class, 'reviews'])->name('reviews.index');
+
+    // Endpoint Khusus untuk Polling (Cek Ulasan Baru)
+    Route::get('/ulasan/check-new', [PageController::class, 'checkNewReviews'])->name('reviews.check');
+    });
 
 
 /*
 |--------------------------------------------------------------------------
-| 5. PEMILIK KOST AREA (OWNER)
+| 6. PEMILIK KOST AREA (KHUSUS OWNER)
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->name('pemilik.')->group(function () {
 
-    // --- ROUTE PROFIL PEMILIK ---
+    // Profil & Keamanan
     Route::get('/profil', [OwnerProfileController::class, 'index'])->name('profile'); 
     Route::get('/profil/edit', [OwnerProfileController::class, 'edit'])->name('profile.edit'); 
     Route::put('/profil/update', [OwnerProfileController::class, 'update'])->name('profile.update');
 
-    // --- ROUTE KEAMANAN/PASSWORD PEMILIK (DISESUAIKAN) ---
-    // Menggunakan prefix /profil/keamanan agar lebih rapi dan konsisten
     Route::get('/profil/keamanan', [OwnerProfileController::class, 'editPassword'])->name('password.edit');
     Route::put('/profil/keamanan', [OwnerProfileController::class, 'updatePassword'])->name('password.update');
 
@@ -163,7 +174,7 @@ Route::middleware(['auth', 'role:pemilik'])->prefix('pemilik')->name('pemilik.')
 
 /*
 |--------------------------------------------------------------------------
-| 6. ADMIN PANEL
+| 7. ADMIN PANEL
 |--------------------------------------------------------------------------
 */
 Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -182,6 +193,9 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::put('/kost/{id}/reset', 'resetStatus')->name('kost.reset');
         Route::put('/kost/{id}/force-reset', 'forceReset')->name('kost.force_reset');
         Route::post('/kost/promotion/{id}', 'promote')->name('kost.promote');
+        Route::post('/kost/reset-recommendation', [App\Http\Controllers\Admin\KostController::class, 'resetRecommendation'])->name('kost.reset_recommendation');
+        Route::post('/kost/ads/{id}', 'updateAds')->name('kost.update_ads'); 
+        Route::post('/kost/reset-recommendation', 'resetRecommendation')->name('kost.reset_recommendation');
     });
 
     // Users & Owners Management
@@ -193,8 +207,7 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
         Route::patch('/owners/{id}/status', 'toggleStatus')->name('owners.status');
     });
 
-    // Reviews Management (ADMIN)
-    // Menggunakan AdminReviewController (Alias)
+    // Reviews Management
     Route::get('/reviews/export', [AdminReviewController::class, 'exportPdf'])->name('reviews.export');
     Route::patch('/reviews/{id}/toggle', [AdminReviewController::class, 'toggleVisibility'])->name('reviews.toggle');
     Route::resource('reviews', AdminReviewController::class)->only(['index', 'destroy'])->names('reviews');
@@ -220,4 +233,57 @@ Route::middleware(['auth:admin'])->prefix('admin')->name('admin.')->group(functi
     })->name('pesan.index');
 
     Route::resource('messages', MessageController::class);
+
+}); // <--- PENUTUP GRUP ADMIN (INI YANG SEBELUMNYA SALAH POSISI)
+
+
+/*
+|--------------------------------------------------------------------------
+| 8. ROUTE DIAGNOSA (Cek Online User)
+|--------------------------------------------------------------------------
+| Route ini DI LUAR grup admin agar User biasa bisa akses untuk testing.
+*/
+Route::get('/cek-online', function () {
+    // Paksa gunakan guard 'web' untuk melihat data User Biasa/Pemilik
+    $user = Illuminate\Support\Facades\Auth::guard('web')->user();
+    
+    echo "<h1>Hasil Diagnosa Sistem</h1>";
+    echo "<p><em>Silakan login sebagai User/Pemilik di tab ini, lalu refresh halaman ini.</em></p><hr>";
+    
+    // 1. Cek Login
+    if (!$user) {
+        return "<h3 style='color:red'>❌ Status: BELUM LOGIN (Sebagai User).</h3>
+                <p>Silakan login dulu melalui <a href='/login'>Halaman Login</a>.</p>";
+    }
+    echo "<h3 style='color:green'>✅ Status: LOGIN BERHASIL</h3>";
+    echo "<ul>
+            <li>Nama: <strong>" . $user->name . "</strong></li>
+            <li>Role: <strong>" . $user->role . "</strong></li>
+            <li>ID: <strong>" . $user->id . "</strong></li>
+          </ul>";
+
+    // 2. Cek Cache Driver
+    $cacheDriver = config('cache.default');
+    echo "<p>Cache Driver: <strong>" . $cacheDriver . "</strong> " . 
+         ($cacheDriver == 'file' || $cacheDriver == 'database' || $cacheDriver == 'redis' ? "✅ (Oke)" : "❌ (Harus file/database)") . "</p>";
+
+    // 3. Tes Update Cache
+    $key = 'user-is-online-' . $user->id;
+    // Cek apakah middleware sudah membuat cache?
+    if (Illuminate\Support\Facades\Cache::has($key)) {
+        echo "<h3 style='color:green'>✅ Cache Online Terdeteksi!</h3>";
+    } else {
+        echo "<h3 style='color:orange'>⚠️ Cache Belum Ada.</h3>";
+        echo "<p>Mencoba membuat cache manual sekarang...</p>";
+        Illuminate\Support\Facades\Cache::put($key, true, now()->addMinutes(5));
+        echo "<p>Cache dibuat manual. Refresh halaman dashboard admin untuk cek.</p>";
+    }
+
+    // 4. Cek Database Last Seen
+    echo "<p>Database Last Seen: <strong>" . ($user->last_seen ? $user->last_seen->format('d M Y H:i:s') : 'NULL (Belum tercatat)') . "</strong></p>";
+    
+    echo "<hr><p><strong>Cara Testing Final:</strong><br>
+          1. Biarkan halaman ini terbuka (artinya User sedang aktif).<br>
+          2. Buka Dashboard Admin di <strong>Browser Lain / Incognito</strong>.<br>
+          3. Lihat apakah angka User Online bertambah.</p>";
 });

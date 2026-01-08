@@ -65,10 +65,17 @@
                         </div>
 
                         {{-- Email --}}
-                        <div>
+                       <div class="mb-6">
                             <label class="block text-sm font-bold text-gray-700 mb-2">Alamat Email</label>
-                            <input type="email" name="email" value="{{ old('email', auth()->user()->email) }}" 
-                                   class="w-full rounded-xl border-gray-300 focus:border-[#2D4A53] focus:ring focus:ring-[#2D4A53]/20 transition">
+                            {{-- Pastikan tagnya <input>, name="email", dan TIDAK ADA 'disabled' atau 'readonly' --}}
+                            <input type="email" name="email" value="{{ old('email', $user->email) }}" 
+                                class="w-full rounded-xl border-gray-300 focus:border-[#2D4A53] focus:ring focus:ring-[#2D4A53]/20 transition" required>
+                            @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            
+                            {{-- Info kecil --}}
+                            <p class="text-xs text-gray-400 mt-2">
+                                <span class="text-orange-500 font-bold">Perhatian:</span> Mengubah email akan mengubah status verifikasi akun Anda.
+                            </p>
                         </div>
 
                         {{-- No HP --}}

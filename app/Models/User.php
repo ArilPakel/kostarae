@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Auth\MustVerifyEmail; 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
-use App\Models\Kost;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -29,6 +29,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'role',
         'google_id',
         'email_verified_at',
+        'last_seen', // [TAMBAHAN] Agar bisa diupdate oleh middleware
     ];
 
     /**
@@ -44,6 +45,8 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        // [PERBAIKAN UTAMA] Ubah string jadi datetime agar diffInMinutes() jalan
+        'last_seen' => 'datetime', 
     ];
 
     /**
@@ -52,6 +55,14 @@ class User extends Authenticatable implements MustVerifyEmail
     public function kosts()
     {
         return $this->hasMany(Kost::class, 'pemilik_id');
+    }
+
+    /**
+     * RELASI: USER → VIEW KOST
+     */
+    public function kostViews()
+    {
+        return $this->hasMany(KostView::class);
     }
 
     /**
@@ -67,8 +78,11 @@ class User extends Authenticatable implements MustVerifyEmail
             );
     }
 
-    public function kostViews()
+    /**
+     * Cek apakah user sedang online (via Cache)
+     */
+    public function isOnline()
     {
-    return $this->hasMany(\App\Models\KostView::class);
+        return Cache::has('user-is-online-' . $this->id);
     }
 }

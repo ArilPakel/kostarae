@@ -9,7 +9,8 @@
     - bg-gradient-to-b: Membuat transisi halus ke bawah (sedikit lebih gelap) untuk kedalaman.
     - pb-36: Padding bawah diperbesar (Breathing Room) agar card tidak menabrak judul.
 --}}
-<div class="relative w-full bg-[#2D4A53] bg-gradient-to-b from-[#2D4A53] to-[#243b42] pt-32 pb-36 px-4 rounded-b-[3rem] shadow-none overflow-hidden">
+<div class="relative w-full bg-gradient-to-b from-[#2D4A53] via-[#263f47] to-[#eef2f5] pt-32 pb-40 px-4 rounded-b-[3rem] overflow-hidden">
+
     
     {{-- Aksen Visual (Opacity dikurangi agar menyatu/tidak kontras) --}}
     <div class="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
@@ -36,17 +37,20 @@
     --------------------------------------------------
     - -mt-24: Card ditarik lebih tinggi ke area "kosong" hero untuk menutup gap visual.
 --}}
-<div class="relative z-20 -mt-24 min-h-screen pb-20 font-sans">
+<div class="relative z-20 -mt-24 min-h-screen pb-20 font-sans bg-[#f8fafc]">
+     <div class="absolute inset-x-0 top-0 h-32 
+        bg-gradient-to-b from-[#eef2f5] to-transparent pointer-events-none">
+    </div>
     <div class="container mx-auto px-4">
 
         {{-- GRID CARD --}}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 justify-center">
             
             @forelse($kosts as $kost)
                 {{-- CARD WRAPPER (Refined Shadows & Borders) --}}
                 {{-- Shadow card diganti ke 'shadow-lg' yang lebih menyebar tapi lembut --}}
                 {{-- Border dibuat sangat tipis/transparan (border-white/60) agar tidak ada garis keras --}}
-                <div class="group flex flex-col h-full bg-white rounded-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+                <div class="group flex flex-col h-full bg-white rounded-2xl border border-white/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-lg hover:-translate-y-1 transition-all duration-300 overflow-hidden">
                     
                     {{-- AREA GAMBAR --}}
                     {{-- bg-gray-50: Warna netral halus jika gambar loading --}}

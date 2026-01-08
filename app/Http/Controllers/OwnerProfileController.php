@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Kost;
-use App\Models\User;
+use App\Models\User; // Pastikan Model User di-import
 
 class OwnerProfileController extends Controller
 {
@@ -21,7 +21,7 @@ class OwnerProfileController extends Controller
         // Hitung Statistik Sederhana
         $stats = [
             'total_kost' => $kosts->count(),
-            'active_kost' => $kosts->where('status', 'aktif')->count(),
+            'active_kost' => $kosts->where('status', 'aktif')->count(), // Pastikan status sesuai DB ('aktif'/'active')
             'total_rooms' => $kosts->sum('jumlah_kamar') ?? 0,
             'total_views' => 0, 
         ];
@@ -32,63 +32,61 @@ class OwnerProfileController extends Controller
     public function edit()
     {
         $user = Auth::user();
-        return view('pemilik.profil.edit', compact('user')); 
+        // Mengarah ke resources/views/pemilik/profil/edit.blade.php
+        return view('pemilik.profil.edit', compact('user'));
     }
 
     /**
-     * Method untuk memproses update profil
+     * Method untuk memproses update profil (Nama, Email, Foto)
      */
     public function update(Request $request)
     {
-        // [PERBAIKAN 1] Ambil ID User dari Auth
         $userId = Auth::id();
-
-        // [PERBAIKAN 2] Cari User menggunakan Model agar terbaca sebagai Eloquent Instance
-        $user = User::findOrFail($userId);
+        $user = User::findOrFail($userId); // Pakai findOrFail agar aman
 
         // 1. Validasi Input
         $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,'.$userId, // Abaikan email sendiri
+            'email' => 'required|email|unique:users,email,'.$userId,
             'phone' => 'nullable|string|max:20',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Max 2MB
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         // 2. Logic Upload Foto
         if ($request->hasFile('avatar')) {
-            // Hapus foto lama jika ada dan file-nya eksis
             if ($user->avatar && Storage::disk('public')->exists($user->avatar)) {
                 Storage::disk('public')->delete($user->avatar);
             }
-            
-            // Simpan foto baru
             $path = $request->file('avatar')->store('avatars', 'public');
             $user->avatar = $path;
         }
 
-        // 3. Update Data Lain
+        // 3. Update Data
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->email_verified_at = null;
         
-        // Cek input phone (Pastikan kolom 'phone' ada di database!)
         if ($request->has('phone')) {
             $user->phone = $request->phone;
         }
 
-        // [EKSEKUSI] Simpan perubahan
-        // Jika masih error di sini, kemungkinan besar kolom 'phone' atau 'avatar' belum ada di tabel 'users'
         $user->save(); 
 
         return back()->with('success', 'Profil berhasil diperbarui!');
     }
 
-     public function editPassword()
+    /**
+     * Halaman Ganti Password
+     */
+    public function editPassword()
     {
+        // [PENTING] Pastikan Anda membuat file view ini: 
+        // resources/views/pemilik/profil/keamanan.blade.php
         return view('pemilik.profil.keamanan');
     }
 
     /**
-     * Proses update password pemilik
+     * Proses Update Password
      */
     public function updatePassword(Request $request)
     {
@@ -97,14 +95,17 @@ class OwnerProfileController extends Controller
             'password' => 'required|min:8|confirmed',
         ]);
 
-        $user = Auth::user();
+        // Gunakan User::find agar objeknya fresh dan bisa di-save
+        $user = User::find(Auth::id());
 
+        // Cek password lama
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors([
                 'current_password' => 'Kata sandi lama tidak sesuai.',
             ]);
         }
 
+        // Update password baru
         $user->password = Hash::make($request->password);
         $user->save();
 

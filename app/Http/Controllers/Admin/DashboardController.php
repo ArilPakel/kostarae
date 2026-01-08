@@ -4,55 +4,68 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kost;
-use App\Models\Report; // Menggunakan Report untuk pesan masuk (sesuai kode Anda)
-use Spatie\Activitylog\Models\Activity; // Menggunakan Spatie untuk log aktivitas
+use App\Models\Report; 
+use App\Models\User; // [TAMBAHAN] Import Model User
+use Spatie\Activitylog\Models\Activity; 
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // 1. STATISTIK UTAMA
-        // Disatukan dalam array '$stats' agar rapi dan sesuai dengan pemanggilan di View
+        // 1. STATISTIK UTAMA (TETAP)
         $stats = [
             'total_kost'    => Kost::count(),
             'pending'       => Kost::where('status', 'pending')->count(),
-            'active'        => Kost::where('status', 'diterima')->count(),
+            'active'        => Kost::whereIn('status', ['diterima', 'aktif'])->count(),
             'rejected'      => Kost::where('status', 'ditolak')->count(),
         ];
 
-        // 2. PESAN MASUK (5 Terbaru)
-        // Kita ambil dari model Report sesuai struktur database Anda sebelumnya
+        // 2. PESAN MASUK (TETAP)
         $latestMessages = Report::latest()->take(5)->get();
 
-        // 3. LOG AKTIVITAS TERBARU
-        // Mengambil data dari tabel activity_log (Spatie)
-        // Pastikan Anda sudah menginstall Spatie Activitylog
+        // 3. LOG AKTIVITAS TERBARU (TETAP)
         $activities = Activity::latest()->with('causer')->take(6)->get();
 
+        // 4. USER ONLINE (BARU - LOGIKA REALTIME)
+        // Memeriksa cache user yang aktif dalam 5 menit terakhir
+        // Pastikan Anda sudah menambahkan method isOnline() di Model User
+        $onlineUsersCount = User::all()->filter->isOnline()->count();
 
         // =================================================================
-        // 4. LOGIKA REKOMENDASI BARU (STRICT FILTER)
+        // 5. LOGIKA REKOMENDASI BARU (SINKRONISASI BERANDA)
         // =================================================================
-        // Hanya mengambil kost yang memenuhi syarat 'is_recommendable' di Model
-        $recommendedKosts = Kost::with(['pemilik'])
-            ->withAvg('reviews', 'rating') // Wajib load agar rating terbaca
-            ->withCount('reviews')         // Wajib load agar jumlah review terbaca
-            ->where('status', 'diterima')
-            ->get() // Ambil semua data aktif dulu untuk difilter PHP
-            ->filter(function ($kost) {
-                // Filter hanya yang memenuhi syarat: Rating >=4, Review >=2, Data 100%
-                return $kost->is_recommendable; 
-            })
-            ->sortByDesc('reviews_avg_rating') // Urutkan dari rating tertinggi
-            ->take(5); // Ambil 5 terbaik
+        
+        // A. Cek Kost yang Dicentang Manual oleh Admin
+        $rekomendasiBeranda = Kost::with(['pemilik'])
+            ->whereIn('status', ['diterima', 'aktif'])
+            ->where('is_recommended', true)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // B. Cek Mode: Apakah ada rekomendasi manual?
+        $isManualMode = $rekomendasiBeranda->isNotEmpty();
+
+        // C. Fallback: Jika Admin BELUM mencentang apapun, gunakan Rating Tertinggi
+        if (!$isManualMode) {
+            $rekomendasiBeranda = Kost::with(['pemilik'])
+                ->withAvg('reviews', 'rating')
+                ->withCount('reviews')
+                ->whereIn('status', ['diterima', 'aktif'])
+                ->orderByDesc('reviews_avg_rating')
+                ->orderByDesc('reviews_count')
+                ->take(5)
+                ->get();
+        }
 
         return view('admin.dashboard.index', compact(
             'stats', 
             'latestMessages', 
             'activities',
-            'recommendedKosts' 
+            'rekomendasiBeranda', 
+            'isManualMode',
+            'onlineUsersCount' // [TAMBAHAN] Kirim ke View
         ));
     }
-
 }

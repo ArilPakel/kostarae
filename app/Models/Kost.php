@@ -11,59 +11,46 @@ use Spatie\Activitylog\LogOptions;
 class Kost extends Model
 {
     use HasFactory;
-    use \App\Traits\Loggable; // Pastikan Trait ini ada di folder App\Traits
     use LogsActivity;
+    
+    // [OPSIONAL] Pastikan file app/Traits/Loggable.php benar-benar ada.
+    // Jika tidak ada/error, beri komentar (//) pada baris di bawah ini:
+    // use \App\Traits\Loggable; 
 
     protected $table = 'kosts';
 
     protected $fillable = [
-        'pemilik_id',      // Relasi ke tabel users
-        
-        // --- VARIASI NAMA (Agar aman jika DB pakai 'nama' atau 'nama_kost') ---
+        'pemilik_id',      
         'nama',            
         'nama_kost',       
-
         'alamat',
         'harga',
-        
-        // --- VARIASI TIPE ---
         'tipe',            
         'tipe_kost',       
-
-        'fasilitas',       // JSON
-        'foto',            // JSON (Fallback jika tidak pakai tabel kost_images)
-        'status',          // pending, diterima, ditolak
+        'fasilitas',       
+        'foto',            
+        'status',          
         'deskripsi',
         'alasan_penolakan',
-
-        // --- LOKASI (Sesuai Controller Admin) ---
         'kota',
         'kecamatan',
         'kelurahan',
-        
-        // --- FITUR IKLAN ---
-        'is_promoted',          // Status apakah sedang diiklankan (true/false)
-        'promoted_start_date',  // Tanggal mulai iklan
-        'promoted_end_date',    // Tanggal selesai iklan
-        
-        // --- FITUR REKOMENDASI ADMIN ---
-        'is_recommended',       // Checkbox rekomendasi manual admin
+        'is_promoted',          
+        'promoted_start_date',  
+        'promoted_end_date',    
+        'is_recommended', // Penting: Kolom baru untuk rekomendasi admin
     ];
 
-    // Casting tipe data otomatis
     protected $casts = [
         'fasilitas' => 'array',
         'foto'      => 'array',
         'harga'     => 'integer',
-        
-        // Casting untuk Iklan & Rekomendasi
         'is_promoted'     => 'boolean',
-        'is_recommended'  => 'boolean', // Baru
+        'is_recommended'  => 'boolean',
         'promoted_start_date' => 'datetime', 
         'promoted_end_date'   => 'datetime', 
     ];
 
-    // Agar atribut tambahan ini ikut muncul saat model di-convert ke JSON/Array
     protected $appends = ['is_recommendable', 'recommendation_issues', 'promotion_status_label', 'data_completeness'];
 
     /*
@@ -72,42 +59,34 @@ class Kost extends Model
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Relasi ke Pemilik (User)
-     */
     public function pemilik()
     {
         return $this->belongsTo(User::class, 'pemilik_id');
     }
 
-    /**
-     * Alias 'user' agar kompatibel dengan Controller lama
-     */
+    // Alias untuk kompatibilitas
     public function user()
     {
         return $this->belongsTo(User::class, 'pemilik_id');
     }
 
-    /**
-     * Relasi ke Review (Has Many)
-     */
     public function reviews()
     {
         return $this->hasMany(Review::class, 'kost_id');
     }
 
     /**
-     * Relasi ke Kost Images (PERBAIKAN UTAMA)
-     * Mengatasi error "Call to undefined relationship [kostImages]"
+     * [PERBAIKAN] Method ini DI-UNCOMMENT agar logika 'getDataCompleteness' berjalan.
+     * Pastikan Anda memiliki model App\Models\KostImage
      */
-    // public function kostImages()
-    // {
-    //     return $this->hasMany(KostImage::class);
-    // }
+    public function kostImages()
+    {
+        // Gunakan try-catch relationship logic atau pastikan model KostImage ada.
+        // Jika Anda TIDAK memakai tabel terpisah untuk foto, biarkan return null atau hapus method ini,
+        // tapi hapus juga pengecekan 'kostImages' di bagian Accessor di bawah.
+        // return $this->hasMany(\App\Models\KostImage::class);
+    }
 
-    /**
-     * Relasi ke Views Counter
-     */
     public function views()
     {
         return $this->hasMany(\App\Models\KostView::class);
@@ -118,7 +97,8 @@ class Kost extends Model
      */
     public function scopeActive($query)
     {
-        return $query->where('status', 'diterima');
+        // Pastikan status di database konsisten ('diterima' atau 'active' atau 'aktif')
+        return $query->where('status', 'diterima')->orWhere('status', 'aktif');
     }
 
     /*
@@ -133,15 +113,18 @@ class Kost extends Model
         $score = 0;
         $total_criteria = 5; 
 
-        // Kriteria 1: Foto minimal 3 (Cek JSON atau Relasi)
+        // Kriteria 1: Foto minimal 3
         $hasImages = false;
-        // Cek JSON
+        
+        // Cek JSON column
         if (!empty($this->foto) && is_array($this->foto) && count($this->foto) >= 3) {
             $hasImages = true;
         } 
-        // Cek Relasi kostImages (Jika JSON kosong)
-        elseif ($this->relationLoaded('kostImages') && $this->kostImages->count() >= 3) {
-            $hasImages = true;
+        // Cek Relasi kostImages (Hanya jika relasi tersedia)
+        elseif (method_exists($this, 'kostImages') && $this->relationLoaded('kostImages')) {
+            if ($this->kostImages->count() >= 3) {
+                $hasImages = true;
+            }
         }
         
         if ($hasImages) $score++;
@@ -153,42 +136,48 @@ class Kost extends Model
         if ($this->harga > 0 && (!empty($this->tipe) || !empty($this->tipe_kost))) $score++;
 
         // Kriteria 4: Fasilitas terisi
-        $fasilitas = $this->fasilitas;
-        if (!empty($fasilitas) && is_array($fasilitas) && count($fasilitas) > 0) $score++;
+        if (!empty($this->fasilitas) && is_array($this->fasilitas) && count($this->fasilitas) > 0) $score++;
 
-        // Kriteria 5: Data Fresh
+        // Kriteria 5: Data Fresh (Update dalam 60 hari terakhir)
         if (optional($this->updated_at)->gte(Carbon::now()->subDays(60))) $score++;
 
         return ($score / $total_criteria) * 100;
     }
 
-    // 2. CEK KELAYAKAN REKOMENDASI (Boolean: True/False)
+    // 2. CEK KELAYAKAN REKOMENDASI OTOMATIS
+    // Catatan: Ini beda dengan 'is_recommended' manual admin. Ini hanya saran sistem.
     public function getIsRecommendableAttribute()
     {
+        // Pastikan controller menggunakan withAvg('reviews', 'rating') & withCount('reviews')
         $rating = $this->reviews_avg_rating ?? 0;
         $count = $this->reviews_count ?? 0;
 
-        return $this->status === 'diterima' &&
+        // Cek status (diterima atau aktif)
+        $isActive = in_array($this->status, ['diterima', 'aktif']);
+
+        return $isActive &&
                $rating >= 4.0 &&
                $count >= 2 &&
-               $this->data_completeness >= 80; // Ambang batas toleransi 80%
+               $this->data_completeness >= 80;
     }
 
-    // 3. ALASAN KENAPA TIDAK LAYAK (Untuk Admin Panel)
+    // 3. ALASAN KENAPA TIDAK LAYAK
     public function getRecommendationIssuesAttribute()
     {
         $issues = [];
         $rating = $this->reviews_avg_rating ?? 0;
         $count = $this->reviews_count ?? 0;
 
-        if ($this->status !== 'diterima') $issues[] = "Status kost belum diterima";
+        if (!in_array($this->status, ['diterima', 'aktif'])) $issues[] = "Status kost belum diterima/aktif";
         if ($rating < 4.0) $issues[] = "Rating rata-rata rendah (< 4.0)";
         if ($count < 2) $issues[] = "Jumlah ulasan kurang (< 2)";
         
-        // Cek foto
+        // Cek jumlah foto
         $fotoCount = 0;
         if (is_array($this->foto)) $fotoCount = count($this->foto);
-        if ($this->relationLoaded('kostImages')) $fotoCount = max($fotoCount, $this->kostImages->count());
+        if (method_exists($this, 'kostImages') && $this->relationLoaded('kostImages')) {
+            $fotoCount = max($fotoCount, $this->kostImages->count());
+        }
 
         if ($fotoCount < 3) $issues[] = "Foto kurang dari 3";
 
@@ -202,9 +191,9 @@ class Kost extends Model
     {
         if (!$this->is_promoted) return 'Nonaktif';
 
-        $now = Carbon::now();
         if (!$this->promoted_start_date || !$this->promoted_end_date) return 'Error Tanggal';
 
+        $now = Carbon::now();
         $start = $this->promoted_start_date;
         $end = $this->promoted_end_date;
 

@@ -4,7 +4,7 @@
 <div class="space-y-8 pb-12 font-sans text-gray-800">
 
     {{-- ===============================================================
-       1. HEADER SECTION
+       1. HEADER SECTION (DIPERBARUI: USER ONLINE & TANGGAL)
        =============================================================== --}}
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-100 pb-5">
         <div>
@@ -15,10 +15,23 @@
                 Pantau performa Kostarae dan ambil tindakan cepat.
             </p>
         </div>
-        <div>
+        
+        {{-- [PERBAIKAN] Menampilkan User Online & Tanggal Berdampingan --}}
+        <div class="flex items-center gap-3">
+            
+            {{-- Indikator User Online --}}
             <div class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm text-gray-600">
-                {{-- Status Pulse Dot (Tetap dipertahankan karena Tailwind class) --}}
-                <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                </span>
+                <span class="font-bold text-gray-900">{{ $onlineUsersCount ?? 0 }}</span>
+                <span class="hidden sm:inline">Online</span>
+            </div>
+
+            {{-- Tanggal --}}
+            <div class="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-sm text-gray-600">
+                <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
                 <span>{{ now()->translatedFormat('l, d F Y') }}</span>
             </div>
         </div>
@@ -29,7 +42,7 @@
        =============================================================== --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        {{-- A. Action Required (Urgent) --}}
+        {{-- A. Action Required --}}
         <a href="{{ route('admin.kost.index', ['status' => 'pending']) }}" 
            class="group bg-white p-6 rounded-xl border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all relative overflow-hidden">
             <div class="flex justify-between items-start">
@@ -45,14 +58,13 @@
             </div>
             <p class="text-xs text-gray-400 mt-4 flex items-center gap-1">
                 Menunggu persetujuan
-                {{-- ICON: Arrow Right (Ganti →) --}}
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5 text-amber-500 group-hover:translate-x-1 transition-transform">
                     <path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.29a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" />
                 </svg>
             </p>
         </a>
 
-        {{-- B. Negative State (Info) --}}
+        {{-- B. Negative State --}}
         <a href="{{ route('admin.kost.index', ['status' => 'ditolak']) }}" 
            class="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-red-200 transition-all">
             <div class="flex justify-between items-start">
@@ -69,7 +81,7 @@
             <p class="text-xs text-gray-400 mt-4">Pengajuan tidak valid</p>
         </a>
 
-        {{-- C. Positive State (Primary) --}}
+        {{-- C. Positive State --}}
         <a href="{{ route('admin.kost.index', ['status' => 'diterima']) }}" 
            class="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-200 transition-all">
             <div class="flex justify-between items-start">
@@ -86,7 +98,7 @@
             <p class="text-xs text-gray-400 mt-4">Tayang di publik</p>
         </a>
 
-        {{-- D. General Info (Neutral) --}}
+        {{-- D. General Info --}}
         <a href="{{ route('admin.kost.index') }}" 
            class="group bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
             <div class="flex justify-between items-start">
@@ -105,7 +117,7 @@
     </div>
 
     {{-- ===============================================================
-       3. FEATURE HIGHLIGHT: REKOMENDASI SISTEM
+       3. FEATURE HIGHLIGHT: REKOMENDASI BERANDA (SINKRON)
        =============================================================== --}}
     <div class="bg-gradient-to-r from-gray-50 to-white rounded-2xl border border-gray-200 p-1">
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -113,22 +125,47 @@
             <div class="px-8 py-6 border-b border-gray-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-gray-900 flex items-center gap-2">
-                        {{-- ICON: Trophy (Ganti 🏆) --}}
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 text-amber-500">
-                            <path fill-rule="evenodd" d="M5.166 2.621v.858c-1.035.148-2.059.33-3.071.543a.75.75 0 00-.584.859 6.753 6.753 0 006.138 5.6 6.73 6.73 0 002.77.549 6.75 6.75 0 002.555-.492 6.75 6.75 0 006.75 0 6.75 6.75 0 002.554.492 6.75 6.75 0 002.769-.549 6.753 6.753 0 006.139-5.6.75.75 0 00-.585-.858 47.767 47.767 0 00-3.07-.543V2.62a.75.75 0 00-.658-.744 49.22 49.22 0 00-6.093-.377c-2.063 0-4.096.128-6.093.377a.75.75 0 00-.657.744zm0 2.629c0 1.196.312 2.32.857 3.294A5.266 5.266 0 013.16 5.337a45.6 45.6 0 012.006-.348zm13.668 8.04l-1.313-1.313 2.953-2.953a.75.75 0 00-1.06-1.06l-2.953 2.953-1.313-1.313a.75.75 0 10-1.06 1.06l1.844 1.843a.75.75 0 001.06 0l1.844-1.843a.75.75 0 00-1.061-1.06l-1.844 1.843-1.313-1.313z" clip-rule="evenodd" />
-                            <path d="M10.5 19.5a1.5 1.5 0 003 0v-1.5a1.5 1.5 0 00-3 0v1.5z" />
-                            <path fill-rule="evenodd" d="M7.125 6.75a.75.75 0 00-1.5 0v10.5c0 1.657 1.343 3 3 3h6.75c1.657 0 3-1.343 3-3V6.75a.75.75 0 00-1.5 0v10.5a1.5 1.5 0 01-1.5 1.5h-6.75a1.5 1.5 0 01-1.5-1.5V6.75z" clip-rule="evenodd" />
+                            <path fill-rule="evenodd" d="M10.788 3.21c.448-1.077 1.976-1.077 2.424 0l2.082 5.007 5.404.433c1.164.093 1.636 1.545.749 2.305l-4.117 3.527 1.257 5.273c.271 1.136-.964 2.033-1.96 1.425L12 18.354 7.373 21.18c-.996.608-2.231-.29-1.96-1.425l1.257-5.273-4.117-3.527c-.887-.76-.415-2.212.749-2.305l5.404-.433 2.082-5.006z" clip-rule="evenodd" />
                         </svg>
-                        Rekomendasi Sistem
+                        Rekomendasi Beranda
                     </h3>
-                    <p class="text-sm text-gray-500 mt-1 max-w-2xl">
-                        Kost "Elite" yang lolos seleksi ketat (Rating > 4.0, Data Lengkap, Reputasi Baik). 
-                        Prioritaskan unit ini untuk promosi.
-                    </p>
+                    
+                    {{-- [PERBAIKAN] Indikator & Tombol Reset Mode --}}
+                    <div class="mt-2 flex items-center gap-2">
+                        <span class="text-sm text-gray-500">Status Tampilan:</span>
+                        @if($isManualMode)
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-700 border border-purple-200">
+                                    Mode Manual (Pilihan Admin)
+                                </span>
+                                {{-- TOMBOL RESET KE OTOMATIS --}}
+                                <form action="{{ route('admin.kost.reset_recommendation') }}" method="POST" onsubmit="return confirm('Kembali ke Mode Otomatis? Semua pilihan manual akan dihapus.')">
+                                    @csrf
+                                    <button type="submit" class="text-xs font-bold text-red-500 hover:text-red-700 underline cursor-pointer" title="Hapus semua centang rekomendasi">
+                                        (Reset ke Otomatis)
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200">
+                                Mode Otomatis (Rating Tertinggi)
+                            </span>
+                        @endif
+                    </div>
                 </div>
-                <a href="{{ route('admin.kost.index', ['sort' => 'rating']) }}" class="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-lg transition shadow-md">
-                    Lihat Semua Kandidat
-                </a>
+                
+                {{-- Tombol Aksi --}}
+                <div class="flex gap-2">
+                    @if(!$isManualMode)
+                        <a href="{{ route('admin.kost.index') }}" class="px-4 py-2 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 text-xs font-bold rounded-lg transition border border-indigo-100">
+                            + Pilih Manual
+                        </a>
+                    @endif
+                    <a href="{{ route('home') }}" target="_blank" class="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-lg transition shadow-md flex items-center gap-2">
+                        Lihat Website <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                    </a>
+                </div>
             </div>
 
             {{-- Content Table --}}
@@ -137,30 +174,38 @@
                     <thead class="bg-gray-50/50 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                         <tr>
                             <th class="px-8 py-4">Unit Kost</th>
-                            <th class="px-6 py-4">Skor & Reputasi</th>
-                            <th class="px-6 py-4">Kualifikasi</th>
+                            <th class="px-6 py-4">Skor Review</th>
+                            <th class="px-6 py-4">Harga</th>
                             <th class="px-8 py-4 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
-                        @forelse ($recommendedKosts as $kost)
+                        @forelse ($rekomendasiBeranda as $kost)
                         <tr class="hover:bg-blue-50/30 transition group">
                             {{-- Info Unit --}}
                             <td class="px-8 py-4">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-14 h-14 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0">
-                                        @if(!empty($kost->foto) && is_array($kost->foto))
-                                            <img src="{{ asset('storage/'.$kost->foto[0]) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                                    <div class="w-14 h-14 rounded-xl bg-gray-100 border border-gray-200 overflow-hidden flex-shrink-0 relative">
+                                        @php
+                                            $foto = is_string($kost->foto) ? json_decode($kost->foto, true) : $kost->foto;
+                                            $imgSrc = is_array($foto) ? ($foto[0]['path'] ?? $foto[0] ?? null) : $foto;
+                                        @endphp
+                                        
+                                        @if($imgSrc)
+                                            <img src="{{ asset('storage/'.$imgSrc) }}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                                         @else
-                                            <div class="flex items-center justify-center h-full text-[10px] text-gray-400">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6">
-                                                    <path fill-rule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clip-rule="evenodd" />
-                                                </svg>
+                                            <div class="flex items-center justify-center h-full text-[10px] text-gray-400">No Img</div>
+                                        @endif
+
+                                        {{-- Badge Manual --}}
+                                        @if($kost->is_recommended)
+                                            <div class="absolute top-0 right-0 p-1 bg-purple-500 rounded-bl-lg shadow-sm" title="Dipilih Manual">
+                                                <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                                             </div>
                                         @endif
                                     </div>
                                     <div>
-                                        <div class="font-bold text-gray-900 text-base mb-0.5">{{ $kost->nama }}</div>
+                                        <div class="font-bold text-gray-900 text-base mb-0.5 line-clamp-1">{{ $kost->nama_kost ?? $kost->nama }}</div>
                                         <div class="text-xs text-gray-500">Owner: {{ $kost->pemilik->name ?? '-' }}</div>
                                     </div>
                                 </div>
@@ -169,29 +214,16 @@
                             {{-- Skor --}}
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2 mb-1">
-                                    <div class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-xs font-bold border border-yellow-200 flex items-center gap-1">
-                                        {{-- ICON: Star Solid (Ganti ⭐) --}}
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3 h-3">
-                                            <path fill-rule="evenodd" d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" clip-rule="evenodd" />
-                                        </svg>
-                                        {{ number_format($kost->reviews_avg_rating, 1) }}
+                                    <div class="bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs font-bold border border-amber-200 flex items-center gap-1">
+                                        ★ {{ number_format($kost->reviews_avg_rating ?? 0, 1) }}
                                     </div>
-                                    <span class="text-xs text-gray-500">{{ $kost->reviews_count }} Ulasan</span>
+                                    <span class="text-xs text-gray-500">({{ $kost->reviews_count ?? 0 }} ulasan)</span>
                                 </div>
                             </td>
 
-                            {{-- Badges --}}
-                            <td class="px-6 py-4">
-                                <div class="flex flex-wrap gap-2">
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
-                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                        Data 100%
-                                    </span>
-                                    <span class="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                                        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        Terpercaya
-                                    </span>
-                                </div>
+                            {{-- Harga --}}
+                            <td class="px-6 py-4 font-bold text-gray-700 text-sm">
+                                Rp {{ number_format($kost->harga, 0, ',', '.') }}
                             </td>
 
                             {{-- Aksi --}}
@@ -204,7 +236,7 @@
                         @empty
                         <tr>
                             <td colspan="4" class="px-8 py-10 text-center">
-                                <p class="text-sm text-gray-500 italic">Belum ada kost yang memenuhi standar rekomendasi sistem.</p>
+                                <p class="text-sm text-gray-500 italic">Belum ada kost aktif untuk ditampilkan.</p>
                             </td>
                         </tr>
                         @endforelse
@@ -219,7 +251,7 @@
        =============================================================== --}}
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {{-- KOLOM KIRI (Aktivitas - 8 Kolom) --}}
+        {{-- KOLOM KIRI (Aktivitas) --}}
         <div class="lg:col-span-8 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col">
             <div class="px-6 py-5 border-b border-gray-100 flex items-center justify-between">
                 <h3 class="font-bold text-gray-900 flex items-center gap-2">
@@ -233,7 +265,6 @@
                 <div class="space-y-6 relative before:absolute before:inset-y-0 before:left-[17px] before:w-0.5 before:bg-gray-100">
                     @forelse($activities as $activity)
                     <div class="relative pl-8 group">
-                        {{-- Dot Indikator --}}
                         <div class="absolute left-3 top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white shadow-sm z-10 
                             {{ $activity->description == 'created' ? 'bg-emerald-500' : ($activity->description == 'deleted' ? 'bg-red-500' : 'bg-blue-500') }}">
                         </div>
@@ -241,16 +272,10 @@
                         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
                             <div class="text-sm text-gray-600">
                                 <span class="font-bold text-gray-900">{{ $activity->causer->name ?? 'System' }}</span>
-                                <span class="mx-1 text-gray-400">
-                                    {{-- Separator Dot SVG --}}
-                                    <svg viewBox="0 0 2 2" width="3" height="3" aria-hidden="true" class="fill-current inline-block align-middle"><circle cx="1" cy="1" r="1" /></svg>
-                                </span>
+                                <span class="mx-1 text-gray-400">&bull;</span>
                                 <span>{{ $activity->description }}</span>
                                 <span class="font-medium bg-gray-50 px-1.5 rounded text-gray-700">
                                     {{ class_basename($activity->subject_type) }}
-                                    @if(isset($activity->properties['attributes']['nama']))
-                                        "{{ Str::limit($activity->properties['attributes']['nama'], 20) }}"
-                                    @endif
                                 </span>
                             </div>
                             <span class="text-xs text-gray-400 whitespace-nowrap">{{ $activity->created_at->diffForHumans() }}</span>
@@ -263,7 +288,7 @@
             </div>
         </div>
 
-        {{-- KOLOM KANAN (Pesan - 4 Kolom) --}}
+        {{-- KOLOM KANAN (Pesan) --}}
         <div class="lg:col-span-4 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full">
             <div class="px-6 py-5 border-b border-gray-100">
                 <h3 class="font-bold text-gray-900 flex items-center gap-2">
@@ -276,27 +301,20 @@
                 @forelse($latestMessages as $msg)
                 <a href="{{ route('admin.messages.show', $msg->id) }}" class="block px-6 py-4 hover:bg-gray-50 transition border-b border-gray-50 last:border-0 group">
                     <div class="flex items-start gap-3">
-                        {{-- Avatar Inisial --}}
                         <div class="w-8 h-8 rounded-full bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xs flex-shrink-0">
                             {{ substr($msg->name ?? 'A', 0, 1) }}
                         </div>
-                        
                         <div class="flex-1 min-w-0">
                             <div class="flex justify-between items-center mb-0.5">
                                 <h4 class="text-sm font-bold text-gray-900 truncate group-hover:text-indigo-600 transition">{{ $msg->name }}</h4>
                                 <span class="text-[10px] text-gray-400">{{ $msg->created_at->diffForHumans(null, true) }}</span>
                             </div>
-                            <p class="text-xs text-gray-500 truncate">
-                                {{ $msg->message }}
-                            </p>
+                            <p class="text-xs text-gray-500 truncate">{{ $msg->message }}</p>
                         </div>
                     </div>
                 </a>
                 @empty
                 <div class="flex flex-col items-center justify-center h-48 text-center px-6">
-                    <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center mb-3 text-gray-300">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" /></svg>
-                    </div>
                     <p class="text-xs text-gray-500">Inbox kosong.</p>
                 </div>
                 @endforelse

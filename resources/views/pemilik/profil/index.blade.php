@@ -4,7 +4,7 @@
 <div class="min-h-screen bg-gray-50 font-sans">
 
     {{-- ========================================================================
-       1. BACKGROUND HEADER (Gradient + Pattern) - DESAIN BARU
+       1. BACKGROUND HEADER (Gradient + Pattern)
        ======================================================================== --}}
     <div class="relative bg-gradient-to-r from-[#2D4A53] to-[#263e46] h-48 md:h-64 overflow-hidden">
         {{-- Pattern Dot Halus --}}
@@ -12,18 +12,18 @@
              style="background-image: radial-gradient(#ffffff 1.5px, transparent 1.5px); background-size: 24px 24px;">
         </div>
         
-        {{-- Dekorasi Circle Blur --}}
+        {{-- Dekorasi Circle Blur (Syntax Error Fixed Here) --}}
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
         <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-40 h-40 bg-orange-500/10 rounded-full blur-2xl"></div>
     </div>
 
     {{-- ========================================================================
-       WRAPPER KONTEN (Agar Floating Card & Data Diri Rata Tengah)
+       WRAPPER KONTEN
        ======================================================================== --}}
     <div class="max-w-5xl mx-auto px-4 sm:px-6 relative -mt-24 pb-12">
         
         {{-- ========================================================================
-           2. FLOATING CARD PROFIL - DESAIN BARU
+           2. FLOATING CARD PROFIL
            ======================================================================== --}}
         <div class="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-10 mb-8">
             
@@ -55,15 +55,9 @@
                         
                         {{-- Badge Role & Status --}}
                         <div class="flex items-center justify-center md:justify-start gap-3">
-                            @if(Auth::user()->role === 'pemilik' || Auth::user()->role === 'owner')
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-50 text-orange-700 border border-orange-100">
-                                    🏠 Pemilik Kost
-                                </span>
-                            @else
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-blue-50 text-blue-700 border border-blue-100">
-                                    🔍 Pencari Kost
-                                </span>
-                            @endif
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-50 text-orange-700 border border-orange-100">
+                                🏠 Pemilik Kost
+                            </span>
 
                             @if(Auth::user()->hasVerifiedEmail())
                                 <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600">
@@ -79,8 +73,8 @@
                         </div>
                     </div>
 
-                    {{-- Tombol Edit Profil --}}
-                    <a href="{{ route('profile.edit') }}" 
+                    {{-- Tombol Edit Profil (ROUTE DIPERBAIKI) --}}
+                    <a href="{{ route('pemilik.profile.edit') }}" 
                        class="inline-flex justify-center items-center gap-2 px-6 py-3 bg-white border border-gray-300 rounded-xl text-sm font-bold text-gray-700 shadow-sm hover:bg-gray-50 hover:text-[#2D4A53] hover:border-[#2D4A53] transition-all transform hover:-translate-y-0.5 focus:ring-2 focus:ring-offset-2 focus:ring-[#2D4A53]">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -105,7 +99,7 @@
 
                     <div class="flex items-center justify-center md:justify-start gap-3">
                         <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </div>
                         <div class="text-left">
                             <p class="text-xs text-gray-400 font-bold uppercase">Bergabung Sejak</p>
@@ -117,7 +111,7 @@
         </div>
 
         {{-- ========================================================================
-           3. DATA DIRI TERPADU (KODE LAMA ANDA)
+           3. DATA DIRI TERPADU
            ======================================================================== --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
@@ -208,10 +202,11 @@
                         @endif
                     </div>
 
-                    {{-- Ganti Password (Sudah diperbaiki) --}}
+                    {{-- Ganti Password (ROUTE DIPERBAIKI) --}}
                     <div>
                         <label class="block text-xs font-bold text-gray-400 uppercase tracking-wide mb-2">Kata Sandi</label>
-                        <a href="{{ auth()->user()->role === 'pemilik'? route('pemilik.password.edit') : route('password.edit') }}"class="flex items-center justify-between w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition group cursor-pointer decoration-0">
+                        <a href="{{ route('pemilik.password.edit') }}" 
+                           class="flex items-center justify-between w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition group cursor-pointer decoration-0">
                             <span class="text-sm font-medium text-gray-700 group-hover:text-orange-600 transition">Ubah Kata Sandi</span>
                             <div class="bg-white p-1.5 rounded-lg border border-gray-200 group-hover:border-orange-200">
                                 <svg class="w-4 h-4 text-gray-400 group-hover:text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
