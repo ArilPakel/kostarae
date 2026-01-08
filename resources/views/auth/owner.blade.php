@@ -2,6 +2,20 @@
 
 @section('content')
 
+    {{-- NOTIFIKASI BERHASIL --}}
+    @if (session('success'))
+        <div id="successAlert"
+            class="fixed top-6 right-6 z-[9999] bg-green-500 text-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            <span class="font-semibold text-sm">
+                {{ session('success') }}
+            </span>
+        </div>
+    @endif
+
+
     <div class="min-h-screen w-full flex items-center justify-center p-4 md:p-8 bg-gray-50">
 
         <div class="relative w-full max-w-5xl bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
@@ -102,7 +116,8 @@
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M13.875 18.825A10.05 10.05 0 0112 19.5c-5.5 0-10-6-10-6a19.977 19.977 0 015.063-4.5M15 12a3 3 0 00-3-3" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 3l18 18" />
                                 </svg>
                             </button>
                         </div>
@@ -123,20 +138,50 @@
         </div>
     </div>
 
-   <script>
-    function togglePassword(inputId, openId, closeId) {
-        const input = document.getElementById(inputId);
-        const eyeOpen = document.getElementById(openId);
-        const eyeClose = document.getElementById(closeId);
+    <script>
+        function togglePassword(inputId, openId, closeId) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = document.getElementById(openId);
+            const eyeClose = document.getElementById(closeId);
 
-        if (input.type === "password") {
-            input.type = "text";
-            eyeOpen.classList.add("hidden");
-            eyeClose.classList.remove("hidden");
-        } else {
-            input.type = "password";
-            eyeOpen.classList.remove("hidden");
-            eyeClose.classList.add("hidden");
+            if (input.type === "password") {
+                input.type = "text";
+                eyeOpen.classList.add("hidden");
+                eyeClose.classList.remove("hidden");
+            } else {
+                input.type = "password";
+                eyeOpen.classList.remove("hidden");
+                eyeClose.classList.add("hidden");
+            }
         }
-    }
-</script>
+    </script>
+
+    <script>
+        setTimeout(() => {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                alert.classList.add('opacity-0', 'translate-x-10');
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 3000);
+    </script>
+
+
+    <style>
+        #successAlert {
+            transition: all 0.5s ease;
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>

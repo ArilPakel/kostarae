@@ -4,13 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Review;
-use Illuminate\Support\Facades\Auth; // Tambahkan Facade Auth
+use Illuminate\Support\Facades\Auth; 
 
 class ReviewUserController extends Controller
 {
-    /**
-     * Simpan review baru
-     */
+    
     public function store(Request $request, $kostId)
     {
         // 1. Cek Login (Safety First)
@@ -79,23 +77,21 @@ class ReviewUserController extends Controller
         return back()->with('success', 'Ulasan berhasil diperbarui!');
     }
 
-    /**
-     * Hapus review
-     */
+   
     public function destroy($id)
     {
-        // Cari review (fail jika tidak ketemu)
+       
         $review = Review::findOrFail($id);
 
-        // Security Check: Pastikan yang menghapus adalah pemilik ulasan
+       
         if ($review->user_id !== Auth::id()) {
             return back()->with('error', 'Tindakan ilegal. Anda tidak bisa menghapus ulasan orang lain.');
         }
 
-        // Hapus
+       
         $review->delete();
 
-        // Return Sukses (Akan ditangkap alert hijau)
+        
         return back()->with('success', 'Ulasan berhasil dihapus.');
     }
 }
